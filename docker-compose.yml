@@ -22,6 +22,31 @@ services:
       - rpg_network
     restart: unless-stopped
 
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rpg_diary_backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-rpg_diary}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-rpg_user}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-secure_password}
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    networks:
+      - rpg_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:
 
