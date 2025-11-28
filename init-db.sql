@@ -9,7 +9,7 @@ CREATE TABLE calendar_types (
 
 -- Calendar Configuration
 CREATE TABLE calendar_configuration (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     calendar_type_code VARCHAR(50) NOT NULL,
     month_number INT NOT NULL,
     month_name VARCHAR(100) NOT NULL,
@@ -25,8 +25,8 @@ CREATE TABLE calendar_configuration (
 
 -- Participants
 CREATE TABLE participants (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(255) NOT NULL UNIQUE,
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
     type VARCHAR(50),
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -35,7 +35,7 @@ CREATE TABLE participants (
 
 -- Parties
 CREATE TABLE parties (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -44,26 +44,26 @@ CREATE TABLE parties (
 
 -- Party Members
 CREATE TABLE party_members (
-    party_id UUID NOT NULL,
-    participant_id UUID NOT NULL,
+    party_id BIGSERIAL NOT NULL,
+    participant_id BIGSERIAL NOT NULL,
     PRIMARY KEY (party_id, participant_id),
     FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE,
     FOREIGN KEY (participant_id) REFERENCES participants(id) ON DELETE CASCADE
 );
 
--- Participant Notable Dates (Updated)
+-- Participant Notable Dates
 CREATE TABLE participant_notable_date (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    participant_id UUID NOT NULL,
+    id BIGSERIAL PRIMARY KEY,
+    participant_id BIGSERIAL NOT NULL,
     calendar_type_code VARCHAR(50) NOT NULL,
     year INT,  -- NULL if recurring
     day INT NOT NULL,
-    day_end INT,  -- NEW: for multi-day events
+    day_end INT,
     event_name VARCHAR(255) NOT NULL,
     description TEXT,
-    is_recurring BOOLEAN DEFAULT false,  -- NEW
-    year_start INT,  -- NEW: when recurring starts
-    year_end INT,  -- NEW: when recurring ends (NULL = forever)
+    is_recurring BOOLEAN DEFAULT false,
+    year_start INT,  -- when recurring starts
+    year_end INT,  -- when recurring ends (NULL = forever)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (participant_id) REFERENCES participants(id) ON DELETE CASCADE,
@@ -71,19 +71,19 @@ CREATE TABLE participant_notable_date (
     UNIQUE(participant_id, calendar_type_code, year, day)
 );
 
--- Party Notable Dates (Updated)
+-- Party Notable Dates
 CREATE TABLE party_notable_date (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    party_id UUID NOT NULL,
+    id BIGSERIAL PRIMARY KEY,
+    party_id BIGSERIAL NOT NULL,
     calendar_type_code VARCHAR(50) NOT NULL,
     year INT,  -- NULL if recurring
     day INT NOT NULL,
-    day_end INT,  -- NEW: for multi-day events
+    day_end INT,  -- for multi-day events
     event_name VARCHAR(255) NOT NULL,
     description TEXT,
-    is_recurring BOOLEAN DEFAULT false,  -- NEW
-    year_start INT,  -- NEW: when recurring starts
-    year_end INT,  -- NEW: when recurring ends (NULL = forever)
+    is_recurring BOOLEAN DEFAULT false,
+    year_start INT,  -- when recurring starts
+    year_end INT,  -- when recurring ends (NULL = forever)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE,
@@ -164,4 +164,4 @@ INSERT INTO participants (name, type, description) VALUES
 
 -- Insert Sample Holiday for Pyarr (Day 1 of Year 1)
 INSERT INTO participant_notable_date (participant_id, calendar_type_code, year, day, day_end, event_name, description, is_recurring, year_start) VALUES
-    ((SELECT id FROM participants WHERE name = 'PyarrCalendar'), 'pyarr', NULL, 16, 20, 'Teremtő akarat ünnepe', 'egy hetes ünnep', TRUE, 1);
+    (1, 'pyarr', NULL, 16, 20, 'Teremtő akarat ünnepe', 'egy hetes ünnep', TRUE, 1);
