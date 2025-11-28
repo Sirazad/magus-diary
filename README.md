@@ -1,5 +1,5 @@
 # RPG Diary App
-
+(This is purely AI generated!! It probably contains a lot of suboptimal, non business standard, insecure solutions, it simply serves the purpose of giving a platform where my backend can be used.)
 A calendar and diary application for tabletop RPG campaigns with support for multiple calendar systems (Pyarr and Kyr).
 
 ## Features
