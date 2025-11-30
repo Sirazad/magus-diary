@@ -1,18 +1,19 @@
 package com.rpgdiary.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder
 public class CalendarEventDTO {
-    private Integer id;
+    private Long id;
+    private Long partyId;
     private String eventName;
     private String description;
-    private String type; // "holiday", "participant", "party"
-    private String relatedEntity; // participant or party name
+    private String type;
+    private String relatedEntity;
     private int dayStart;
     private Integer dayEnd;
     private boolean isRecurring;

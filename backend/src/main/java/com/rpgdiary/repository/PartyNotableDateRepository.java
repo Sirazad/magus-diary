@@ -1,9 +1,12 @@
 package com.rpgdiary.repository;
 
 import com.rpgdiary.model.CalendarType;
+import com.rpgdiary.model.ParticipantNotableDate;
 import com.rpgdiary.model.Party;
 import com.rpgdiary.model.PartyNotableDate;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -24,4 +27,11 @@ public interface PartyNotableDateRepository extends JpaRepository<PartyNotableDa
             CalendarType calendarType);
 
     List<PartyNotableDate> findByParty(Party party);
+
+    @Query("SELECT pnd FROM PartyNotableDate pnd " +
+            "WHERE pnd.calendarType = :calendarType " +
+            "AND pnd.yearStart <= :year AND pnd.yearEnd >= :year")
+    List<? extends PartyNotableDate> findByCalendarTypeAndYearIncluded(
+            @Param("calendarType") CalendarType calendarType,
+            @Param("year") Integer year);
 }

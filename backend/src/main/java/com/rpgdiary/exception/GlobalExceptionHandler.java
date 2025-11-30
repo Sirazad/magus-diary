@@ -12,7 +12,7 @@ import java.util.NoSuchElementException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(NoSuchElementException.class)
+    @ExceptionHandler({NoSuchElementException.class, CalendarNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNoSuchElementException(
             NoSuchElementException ex,
             WebRequest request) {
