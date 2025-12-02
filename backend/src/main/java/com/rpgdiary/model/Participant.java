@@ -10,14 +10,12 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.Set;
 
 import static jakarta.persistence.GenerationType.IDENTITY;
@@ -25,8 +23,7 @@ import static jakarta.persistence.GenerationType.IDENTITY;
 @Entity
 @Table(name = "participants")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder
 public class Participant {
 
     @Id
@@ -49,7 +46,7 @@ public class Participant {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "participant", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ParticipantNotableDate> notableDates = new HashSet<>();
+    private Set<ParticipantNotableDate> notableDates;
 
     @ManyToMany
     @JoinTable(
@@ -57,6 +54,6 @@ public class Participant {
             joinColumns = @JoinColumn(name = "participant_id"),
             inverseJoinColumns = @JoinColumn(name = "party_id")
     )
-    private Set<Party> parties = new HashSet<>();
+    private Set<Party> parties;
 
 }

@@ -1,15 +1,13 @@
 package com.rpgdiary.dto;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder
 public class ParticipantNotableDateDTO {
-    private Integer id;
-    private Integer participantId;
+    private Long id;
+    private Long participantId;
     private String calendarTypeCode;
     private Integer year;
     private int day;

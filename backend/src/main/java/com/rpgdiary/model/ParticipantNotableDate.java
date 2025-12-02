@@ -7,9 +7,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -20,8 +19,7 @@ import static jakarta.persistence.GenerationType.IDENTITY;
 @Entity
 @Table(name = "participant_notable_date")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder
 public class ParticipantNotableDate {
 
     @Id

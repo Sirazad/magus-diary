@@ -6,8 +6,8 @@ import lombok.Data;
 @Data
 @Builder
 public class PartyNotableDateDTO {
-    private Integer id;
-    private Integer partyId;
+    private Long id;
+    private Long partyId;
     private String calendarTypeCode;
     private Integer year;
     private int day;
