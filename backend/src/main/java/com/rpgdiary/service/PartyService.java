@@ -2,6 +2,7 @@ package com.rpgdiary.service;
 
 import com.rpgdiary.dto.PartyDTO;
 import com.rpgdiary.dto.PartyNotableDateDTO;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -26,4 +27,8 @@ public interface PartyService {
     PartyNotableDateDTO addNotableDate(PartyNotableDateDTO dto);
 
     void deleteNotableDate(Long notableDateId);
+
+    @Nullable PartyNotableDateDTO getPartyNotableDateById(Long id);
+
+    @Nullable PartyNotableDateDTO updateNotableDate(Long id, PartyNotableDateDTO request);
 }

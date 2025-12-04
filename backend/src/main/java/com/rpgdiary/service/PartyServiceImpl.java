@@ -14,6 +14,7 @@ import com.rpgdiary.repository.ParticipantRepository;
 import com.rpgdiary.repository.PartyNotableDateRepository;
 import com.rpgdiary.repository.CalendarTypeRepository;
 import lombok.AllArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 
@@ -165,6 +166,49 @@ public class PartyServiceImpl implements PartyService {
                         "Notable date not found with id: " + notableDateId
                 ));
         partyNotableDateRepository.delete(notableDate);
+    }
+
+    @Override
+    public @Nullable PartyNotableDateDTO getPartyNotableDateById(Long notableDateId) {
+        PartyNotableDate notableDate = partyNotableDateRepository.findById(notableDateId)
+                .orElseThrow(() -> new java.util.NoSuchElementException(
+                        "Notable date not found with id: " + notableDateId
+                ));
+        return convert(notableDate);
+    }
+
+    @Override
+    public @Nullable PartyNotableDateDTO updateNotableDate(Long id, PartyNotableDateDTO request) {
+        return partyNotableDateRepository.findById(id)
+                .map(notableDate -> {
+                    if (request.getDay() != 0) {
+                        notableDate.setDay(request.getDay());
+                    }
+                    if (request.getDayEnd() != null) {
+                        notableDate.setDayEnd(request.getDayEnd());
+                    }
+                    if (request.getEventName() != null) {
+                        notableDate.setEventName(request.getEventName());
+                    }
+                    if (request.getDescription() != null) {
+                        notableDate.setDescription(request.getDescription());
+                    }
+                    if (request.getYear() != null) {
+                        notableDate.setYear(request.getYear());
+                    }
+                    if (request.getYearStart() != null) {
+                        notableDate.setYearStart(request.getYearStart());
+                    }
+                    if (request.getYearEnd() != null) {
+                        notableDate.setYearEnd(request.getYearEnd());
+                    }
+                    notableDate.setRecurring(request.isRecurring());
+
+                    return convert(partyNotableDateRepository.save(notableDate));
+                })
+                .orElseThrow(() -> new java.util.NoSuchElementException(
+                        "Notable date not found with id: " + id
+                ));
     }
 
     private PartyDTO convert(Party party) {
