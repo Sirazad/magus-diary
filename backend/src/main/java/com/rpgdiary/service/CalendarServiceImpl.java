@@ -110,6 +110,14 @@ public class CalendarServiceImpl implements CalendarService {
                 .build();
     }
 
+    @Override
+    public Integer getMonthCountForCalendarType(String calendarTypeCode) {
+        CalendarType calendarType = calendarTypeRepository.findById(calendarTypeCode)
+                .orElseThrow(() -> new CalendarNotFoundException(calendarTypeCode));
+        return calendarConfigurationRepository.countByCalendarType(calendarType);
+
+    }
+
     private List<CalendarEventDTO> getHolidaysForDate(CalendarType calendarType, int year, int day) {
         List<ParticipantNotableDate> holidays = participantNotableDateRepository
                 .findByCalendarTypeAndYearIsNullAndIsRecurringTrue(calendarType);

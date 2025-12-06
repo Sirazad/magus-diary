@@ -53,4 +53,11 @@ public class CalendarController {
             @PathVariable int day) {
         return ResponseEntity.ok(calendarService.getCalendarDate(calendarTypeCode, year, day));
     }
+
+    @GetMapping("/types/{code}/months")
+    public ResponseEntity<Integer> getMonthCountForCalendarType(
+            @PathVariable String code) {
+        Integer monthCount = calendarService.getMonthCountForCalendarType(code);
+        return ResponseEntity.ok(monthCount);
+    }
 }

@@ -6,24 +6,20 @@ import com.rpgdiary.converter.ParticipantNotableDateToDTOConverter;
 import com.rpgdiary.converter.ParticipantNotableEventToCalendarEventDtoConverter;
 import com.rpgdiary.converter.ParticipantToDTOConverter;
 import com.rpgdiary.converter.PartyNotableEventToCalendarEventDtoConverter;
-import com.rpgdiary.dto.ParticipantNotableDateDTO;
-import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.core.convert.converter.Converter;
 import org.springframework.format.support.FormattingConversionService;
 
 @Configuration
-@AllArgsConstructor
 public class AppConfig {
 
-    private final CalendarConfigToDTOConverter calendarConfigToDTOConverter;
-    private final CalendarTypeToDTOConverter calendarTypeToDTOConverter;
-    private final ParticipantNotableEventToCalendarEventDtoConverter participantNotableEventToCalendarEventDtoConverter;
-    private final PartyNotableEventToCalendarEventDtoConverter partyNotableEventToCalendarEventDtoConverter;
-    private final ParticipantToDTOConverter participantToDTOConverter;
-    private final ParticipantNotableDateToDTOConverter participantNotableDateToDTOConverter;
+    private final CalendarConfigToDTOConverter calendarConfigToDTOConverter = new CalendarConfigToDTOConverter();
+    private final CalendarTypeToDTOConverter calendarTypeToDTOConverter = new CalendarTypeToDTOConverter();
+    private final ParticipantNotableEventToCalendarEventDtoConverter participantNotableEventToCalendarEventDtoConverter = new ParticipantNotableEventToCalendarEventDtoConverter();
+    private final PartyNotableEventToCalendarEventDtoConverter partyNotableEventToCalendarEventDtoConverter = new PartyNotableEventToCalendarEventDtoConverter();
+    private final ParticipantToDTOConverter participantToDTOConverter = new ParticipantToDTOConverter();
+    private final ParticipantNotableDateToDTOConverter participantNotableDateToDTOConverter = new ParticipantNotableDateToDTOConverter();
 
     @Bean
     @Lazy

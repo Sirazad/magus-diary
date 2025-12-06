@@ -18,4 +18,6 @@ public interface CalendarService {
     CalendarConfigurationDTO getMonthConfiguration(String calendarTypeCode, int monthNumber);
 
     CalendarDateDTO getCalendarDate(String calendarTypeCode, int year, int day);
+
+    Integer getMonthCountForCalendarType(String code);
 }

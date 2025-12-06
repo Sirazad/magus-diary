@@ -16,4 +16,6 @@ public interface CalendarConfigurationRepository extends JpaRepository<CalendarC
     Optional<CalendarConfiguration> findByCalendarTypeAndMonthNumber(CalendarType calendarType, int monthNumber);
 
     List<CalendarConfiguration> findByCalendarType(CalendarType calendarType);
+
+    Integer countByCalendarType(CalendarType calendarType);
 }
