@@ -14,6 +14,17 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [isEditingYear, setIsEditingYear] = useState(false);
 
+  // Fetch total number of months in this calendar type
+  const { data: totalMonths } = useQuery({
+    queryKey: ['calendar-months', calendarTypeCode],
+    queryFn: async () => {
+      const response = await apiClient.get<number>(
+        `/calendar/types/${calendarTypeCode}/months`
+      );
+      return response.data;
+    },
+  });
+
   // Fetch month configuration for the current month
   const { data: monthConfig, isLoading, error } = useQuery({
     queryKey: ['calendar', calendarTypeCode, currentMonth],
@@ -51,11 +62,25 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
   }
 
   const handlePreviousMonth = () => {
-    setCurrentMonth(currentMonth - 1);
+    if (currentMonth === 1) {
+      // Wrap to previous year, last month
+      if (totalMonths) {
+        setYear(year - 1);
+        setCurrentMonth(totalMonths);
+      }
+    } else {
+      setCurrentMonth(currentMonth - 1);
+    }
   };
 
   const handleNextMonth = () => {
-    setCurrentMonth(currentMonth + 1);
+    if (totalMonths && currentMonth === totalMonths) {
+      // Wrap to next year, first month
+      setYear(year + 1);
+      setCurrentMonth(1);
+    } else {
+      setCurrentMonth(currentMonth + 1);
+    }
   };
 
   const handleDateClick = (day: number) => {
@@ -84,7 +109,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
   return (
     <div className="calendar-grid-container">
       <div className="calendar-header">
-        <button onClick={handlePreviousMonth} className="calendar-nav-btn" disabled={currentMonth === 1}>
+        <button onClick={handlePreviousMonth} className="calendar-nav-btn">
           ← Previous Month
         </button>
         <h2 className="calendar-title">
