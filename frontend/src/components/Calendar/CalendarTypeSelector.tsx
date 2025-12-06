@@ -44,28 +44,6 @@ export const CalendarTypeSelector: React.FC<CalendarTypeSelectorProps> = ({
           </option>
         ))}
       </select>
-
-      <div className="calendar-info">
-        {calendarTypes
-          .filter((c) => c.code === selectedCalendarCode)
-          .map((calendar) => (
-            <div key={calendar.code} className="info-card">
-              <h3>{calendar.name}</h3>
-              <div className="info-grid">
-                <div className="info-item">
-                  <span className="info-label">Days per Year:</span>
-                  <span className="info-value">{calendar.daysPerYear}</span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Weeks per Year:</span>
-                  <span className="info-value">
-                    {Math.ceil(calendar.daysPerYear / 5)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-      </div>
     </div>
   );
 };

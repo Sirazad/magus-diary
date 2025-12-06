@@ -10,31 +10,40 @@ interface CalendarGridProps {
 
 export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) => {
   const [year, setYear] = useState(3698);
-  const [currentMonth, setCurrentMonth] = useState(9);
+  const [currentDay, setCurrentDay] = useState(161); // Default to day 161 (month 9, day 1)
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [isEditingYear, setIsEditingYear] = useState(false);
 
-  // Fetch total number of months in this calendar type
-  const { data: totalMonths } = useQuery({
-    queryKey: ['calendar-months', calendarTypeCode],
+  // Fetch all month configurations to find which month contains currentDay
+  const { data: allMonthConfigs } = useQuery({
+    queryKey: ['calendar-all-months', calendarTypeCode],
     queryFn: async () => {
       const response = await apiClient.get<number>(
         `/calendar/types/${calendarTypeCode}/months`
       );
-      return response.data;
+      const totalMonths = response.data;
+      
+      // Fetch all month configs
+      const monthPromises = [];
+      for (let i = 1; i <= totalMonths; i++) {
+        monthPromises.push(
+          apiClient.get<MonthConfigDTO>(
+            `/calendar/config/${calendarTypeCode}/${i}`
+          ).then(res => res.data)
+        );
+      }
+      return Promise.all(monthPromises);
     },
   });
 
-  // Fetch month configuration for the current month
-  const { data: monthConfig, isLoading, error } = useQuery({
-    queryKey: ['calendar', calendarTypeCode, currentMonth],
-    queryFn: async () => {
-      const response = await apiClient.get<MonthConfigDTO>(
-        `/calendar/config/${calendarTypeCode}/${currentMonth}`
-      );
-      return response.data;
-    },
-  });
+  // Find the month that contains the current day
+  const currentMonthConfig = allMonthConfigs?.find(
+    config => currentDay >= config.dayStart && currentDay <= config.dayEnd
+  );
+
+  const isLoading = !allMonthConfigs;
+  const error = false;
+  const monthConfig = currentMonthConfig;
 
   if (isLoading) return <div className="calendar-loading">Loading calendar...</div>;
   if (error) return <div className="calendar-error">Error loading calendar</div>;
@@ -62,24 +71,66 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
   }
 
   const handlePreviousMonth = () => {
-    if (currentMonth === 1) {
-      // Wrap to previous year, last month
-      if (totalMonths) {
-        setYear(year - 1);
-        setCurrentMonth(totalMonths);
-      }
+    if (!allMonthConfigs || !currentMonthConfig) return;
+    
+    const currentMonthIndex = allMonthConfigs.findIndex(
+      config => config.monthNumber === currentMonthConfig.monthNumber
+    );
+    
+    if (currentMonthIndex > 0) {
+      // Go to first day of previous month
+      const prevMonthConfig = allMonthConfigs[currentMonthIndex - 1];
+      setCurrentDay(prevMonthConfig.dayStart);
     } else {
-      setCurrentMonth(currentMonth - 1);
+      // Wrap to previous year, last month
+      setYear(year - 1);
+      const lastMonthConfig = allMonthConfigs[allMonthConfigs.length - 1];
+      setCurrentDay(lastMonthConfig.dayStart);
     }
   };
 
   const handleNextMonth = () => {
-    if (totalMonths && currentMonth === totalMonths) {
+    if (!allMonthConfigs || !currentMonthConfig) return;
+    
+    const currentMonthIndex = allMonthConfigs.findIndex(
+      config => config.monthNumber === currentMonthConfig.monthNumber
+    );
+    
+    if (currentMonthIndex < allMonthConfigs.length - 1) {
+      // Go to first day of next month
+      const nextMonthConfig = allMonthConfigs[currentMonthIndex + 1];
+      setCurrentDay(nextMonthConfig.dayStart);
+    } else {
       // Wrap to next year, first month
       setYear(year + 1);
-      setCurrentMonth(1);
+      const firstMonthConfig = allMonthConfigs[0];
+      setCurrentDay(firstMonthConfig.dayStart);
+    }
+  };
+
+  const handlePreviousDay = () => {
+    if (!allMonthConfigs) return;
+    
+    if (currentDay > 1) {
+      setCurrentDay(currentDay - 1);
     } else {
-      setCurrentMonth(currentMonth + 1);
+      // Wrap to previous year, last day
+      setYear(year - 1);
+      const lastMonthConfig = allMonthConfigs[allMonthConfigs.length - 1];
+      setCurrentDay(lastMonthConfig.dayEnd);
+    }
+  };
+
+  const handleNextDay = () => {
+    if (!allMonthConfigs) return;
+    
+    const lastMonthConfig = allMonthConfigs[allMonthConfigs.length - 1];
+    if (currentDay < lastMonthConfig.dayEnd) {
+      setCurrentDay(currentDay + 1);
+    } else {
+      // Wrap to next year, first day
+      setYear(year + 1);
+      setCurrentDay(1);
     }
   };
 
@@ -109,11 +160,16 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
   return (
     <div className="calendar-grid-container">
       <div className="calendar-header">
-        <button onClick={handlePreviousMonth} className="calendar-nav-btn">
-          ← Previous Month
-        </button>
+        <div className="nav-group">
+          <button onClick={handlePreviousMonth} className="calendar-nav-btn">
+            ← előző hónap
+          </button>
+          <button onClick={handlePreviousDay} className="calendar-nav-btn calendar-nav-btn-day">
+            ← nap
+          </button>
+        </div>
         <h2 className="calendar-title">
-          {calendarDates[0]?.monthName || calendarTypeCode.toUpperCase()} - 
+          {calendarDates[0]?.monthName} {calendarDates.find(d => d.day === currentDay)?.dayInMonth || 1} - 
           {isEditingYear ? (
             <input 
               type="number" 
@@ -130,16 +186,27 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
             </span>
           )}
         </h2>
-        <button onClick={handleNextMonth} className="calendar-nav-btn">
-          Next Month →
-        </button>
+        <div className="nav-group">
+          <button onClick={handleNextDay} className="calendar-nav-btn calendar-nav-btn-day">
+            nap →
+          </button>
+          <button onClick={handleNextMonth} className="calendar-nav-btn">
+            következő hónap →
+          </button>
+        </div>
       </div>
 
       <div className="calendar-months">
-        <div key={currentMonth} className="calendar-month">
-          <h3 className="month-title">
-            {calendarDates[0]?.monthName} - {calendarDates[0]?.season}{calendarDates[0]?.godName ? ` - ${calendarDates[0].godName}` : ''}
-          </h3>
+        <div key={currentDay} className="calendar-month">
+          <div className="month-info">
+            <span>
+              {calendarDates[0]?.season}
+              {calendarDates[0]?.godName && ` - ${calendarDates[0].godName}`}
+              {` - ${calendarDates[0]?.monthName}`}
+              {` - ${calendarDates.find(d => d.day === currentDay)?.dayInMonth || 1}`}
+              <span className="day-in-year"> ({currentDay})</span>
+            </span>
+          </div>
           <div className="month-grid">
             {calendarDates.map((date) => (
                 <div
@@ -148,7 +215,9 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
                     date.holidays.length > 0 ? 'has-holiday' : ''
                   } ${date.participantNotableDates.length > 0 ? 'has-participant' : ''} ${
                     date.partyNotableDates.length > 0 ? 'has-party' : ''
-                  } ${selectedDay === date.day ? 'selected' : ''}`}
+                  } ${selectedDay === date.day ? 'selected' : ''} ${
+                    date.day === currentDay ? 'active' : ''
+                  }`}
                   onClick={() => handleDateClick(date.day)}
                 >
                   <div className="date-number">{date.dayInMonth}</div>
