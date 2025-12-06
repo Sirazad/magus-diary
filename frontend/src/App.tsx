@@ -2,6 +2,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { CalendarTypeSelector } from './components/Calendar/CalendarTypeSelector';
 import { CalendarGrid } from './components/Calendar/CalendarGrid';
+import { ParticipantList } from './components/Participant/ParticipantList';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -21,6 +22,7 @@ function App() {
             selectedCalendarCode={selectedCalendar}
             onCalendarChange={setSelectedCalendar}
           />
+          <ParticipantList />
           <CalendarGrid calendarTypeCode={selectedCalendar} />
         </main>
       </div>
