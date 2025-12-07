@@ -30,7 +30,7 @@ export const CalendarTypeSelector: React.FC<CalendarTypeSelectorProps> = ({
   return (
     <div className="calendar-type-selector">
       <label htmlFor="calendar-select" className="selector-label">
-        Select Calendar:
+        Naptár választása:
       </label>
       <select
         id="calendar-select"
