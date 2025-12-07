@@ -6,6 +6,7 @@ import com.rpgdiary.converter.ParticipantNotableDateToDTOConverter;
 import com.rpgdiary.converter.ParticipantNotableEventToCalendarEventDtoConverter;
 import com.rpgdiary.converter.ParticipantToDTOConverter;
 import com.rpgdiary.converter.PartyNotableEventToCalendarEventDtoConverter;
+import com.rpgdiary.converter.PartyToDTOConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -20,6 +21,7 @@ public class AppConfig {
     private final PartyNotableEventToCalendarEventDtoConverter partyNotableEventToCalendarEventDtoConverter = new PartyNotableEventToCalendarEventDtoConverter();
     private final ParticipantToDTOConverter participantToDTOConverter = new ParticipantToDTOConverter();
     private final ParticipantNotableDateToDTOConverter participantNotableDateToDTOConverter = new ParticipantNotableDateToDTOConverter();
+    private final PartyToDTOConverter partyToDTOConverter = new PartyToDTOConverter();
 
     @Bean
     @Lazy
@@ -32,6 +34,7 @@ public class AppConfig {
         conversionService.addConverter(partyNotableEventToCalendarEventDtoConverter);
         conversionService.addConverter(participantToDTOConverter);
         conversionService.addConverter(participantNotableDateToDTOConverter);
+        conversionService.addConverter(partyToDTOConverter);
 
         return conversionService;
     }

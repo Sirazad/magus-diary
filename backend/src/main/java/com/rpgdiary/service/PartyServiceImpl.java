@@ -14,15 +14,18 @@ import com.rpgdiary.repository.ParticipantRepository;
 import com.rpgdiary.repository.PartyNotableDateRepository;
 import com.rpgdiary.repository.CalendarTypeRepository;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class PartyServiceImpl implements PartyService {
 
     private final PartyRepository partyRepository;
@@ -34,17 +37,23 @@ public class PartyServiceImpl implements PartyService {
     //TODO change validation level to method call in controller with @Valid annotation
 
     @Override
+    @Transactional(readOnly = true)
     public List<PartyDTO> getAllParties() {
-        return partyRepository.findAllByOrderByName()
+
+        List<PartyDTO> parties = partyRepository.findAllByOrderByName()
                 .stream()
                 .map(this::convert)
                 .toList();
+
+        log.info("Retrieved {} parties", parties.size());
+        return parties;
     }
 
     @Override
     public PartyDTO getPartyById(Long id) {
         Party party = partyRepository.findById(id)
                 .orElseThrow(() -> new PartyNotFoundException("id: " + id));
+        log.info("Retrieved party with id {}", id);
         return convert(party);
     }
 
@@ -59,19 +68,20 @@ public class PartyServiceImpl implements PartyService {
         Party party = Party.builder()
                 .name(request.getName())
                 .description(request.getDescription())
+                .members(new HashSet<>())
                 .build();
 
-         return convert(partyRepository.save(party));
+        log.info("Creating party with name {}", request.getName());
+        return convert(partyRepository.save(party));
     }
 
     private void checkPartyExistence(String name) {
         partyRepository.findByName(name)
-                .ifPresent(p -> {
+                .ifPresent( p -> {
                     throw new IllegalStateException(
                             "Party with name '" + name + "' already exists"
                     );
                 });
-
     }
 
     @Override
@@ -87,6 +97,7 @@ public class PartyServiceImpl implements PartyService {
             party.setDescription(request.getDescription());
         }
 
+        log.info("Updating party with id {}, to content {}", id, party);
         return convert(partyRepository.save(party));
     }
 
@@ -94,6 +105,7 @@ public class PartyServiceImpl implements PartyService {
     public void deleteParty(Long id) {
         Party party = partyRepository.findById(id)
                 .orElseThrow(() -> new PartyNotFoundException("id: " + id));
+        log.info("Deleting party with id {}", id);
         partyRepository.delete(party);
     }
 
@@ -106,6 +118,7 @@ public class PartyServiceImpl implements PartyService {
                 .orElseThrow(() -> new ParticipantNotFoundException("id: " + participantId));
 
         party.getMembers().add(participant);
+        log.info("Adding participant with name {} to party {}", participant.getName(), party.getName());
         partyRepository.save(party);
     }
 
@@ -118,6 +131,7 @@ public class PartyServiceImpl implements PartyService {
                 .orElseThrow(() -> new ParticipantNotFoundException("id: " + participantId));
 
         party.getMembers().remove(participant);
+        log.info("Removing participant with name {} from party {}", participant.getName(), party.getName());
         partyRepository.save(party);
     }
 

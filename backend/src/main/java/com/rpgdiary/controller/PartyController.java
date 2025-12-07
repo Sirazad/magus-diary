@@ -3,6 +3,7 @@ package com.rpgdiary.controller;
 import com.rpgdiary.dto.PartyDTO;
 import com.rpgdiary.service.PartyService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -21,12 +22,14 @@ import java.util.List;
 @RequestMapping("/api/parties")
 @CrossOrigin(origins = "http://localhost:5173")
 @AllArgsConstructor
+@Slf4j
 public class PartyController {
 
     private final PartyService partyService;
 
     @GetMapping
     public ResponseEntity<List<PartyDTO>> getAllParties() {
+        log.info("Received request to get all parties");
         return ResponseEntity.ok(partyService.getAllParties());
     }
 

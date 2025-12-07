@@ -1,16 +1,17 @@
 package com.rpgdiary.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+
 import java.util.Set;
 
 @Data
-@NoArgsConstructor
+@Builder
 @AllArgsConstructor
 public class PartyDTO {
-    private Integer id;
+    private Long id;
     private String name;
     private String description;
-    private Set<Integer> memberIds;
+    private Set<Long> memberIds;
 }
