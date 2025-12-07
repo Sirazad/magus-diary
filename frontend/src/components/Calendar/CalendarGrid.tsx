@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api';
-import type { CalendarDateDTO, MonthConfigDTO } from '../../types/Calendar';
+import type { CalendarDateDTO, MonthConfigDTO, CalendarEvent } from '../../types/Calendar';
+import { EventManager } from '../Events/EventManager';
 import './CalendarGrid.css';
 
 interface CalendarGridProps {
@@ -13,6 +14,19 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
   const [currentDay, setCurrentDay] = useState(161); // Default to day 161 (month 9, day 1)
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [isEditingYear, setIsEditingYear] = useState(false);
+  const [showEventPanel, setShowEventPanel] = useState(false);
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
+  
+  // Event type filters
+  const [showHolidays, setShowHolidays] = useState(true);
+  const [showParticipantEvents, setShowParticipantEvents] = useState(true);
+  const [showPartyEvents, setShowPartyEvents] = useState(true);
+  
+  // Entity filters (participant/party IDs or names)
+  const [selectedParticipants, setSelectedParticipants] = useState<Set<string>>(new Set());
+  const [selectedParties, setSelectedParties] = useState<Set<string>>(new Set());
+  
+  const queryClient = useQueryClient();
 
   // Fetch all month configurations to find which month contains currentDay
   const { data: allMonthConfigs } = useQuery({
@@ -41,9 +55,153 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
     config => currentDay >= config.dayStart && currentDay <= config.dayEnd
   );
 
+  // Fetch all events for the current month
+  const { data: monthEvents } = useQuery({
+    queryKey: ['calendar-month-events', calendarTypeCode, year, currentMonthConfig?.monthNumber],
+    queryFn: async () => {
+      if (!currentMonthConfig) return [];
+      
+      // Fetch calendar dates for all days in the month range in parallel
+      const allEvents: CalendarEvent[] = [];
+      const seenEventIds = new Set<string>();
+      
+      // Create all requests at once
+      const dayRequests = [];
+      for (let day = currentMonthConfig.dayStart; day <= currentMonthConfig.dayEnd; day++) {
+        dayRequests.push(
+          apiClient.get<CalendarDateDTO>(
+            `/calendar/${calendarTypeCode}/${year}/${day}`
+          ).catch(() => null) // Handle errors gracefully
+        );
+      }
+      
+      // Execute all requests in parallel
+      const responses = await Promise.all(dayRequests);
+      
+      // Collect events from all responses
+      responses.forEach(response => {
+        if (response?.data) {
+          const dateData = response.data;
+          [...dateData.holidays, ...dateData.participantNotableDates, ...dateData.partyNotableDates].forEach(event => {
+            if (!seenEventIds.has(event.id)) {
+              seenEventIds.add(event.id);
+              allEvents.push(event);
+            }
+          });
+        }
+      });
+      
+      console.log('Fetched events for month:', allEvents);
+      return allEvents;
+    },
+    enabled: !!currentMonthConfig,
+    staleTime: Infinity, // Never automatically refetch
+    gcTime: 60 * 60 * 1000, // Keep in cache for 1 hour
+  });
+
   const isLoading = !allMonthConfigs;
   const error = false;
   const monthConfig = currentMonthConfig;
+
+  // Helper function to check if an event is active on a specific day and year
+  const isEventActiveOnDay = (event: CalendarEvent, day: number, currentYear: number): boolean => {
+    // Check if day is in range
+    const dayInRange = day >= event.dayStart && (event.dayEnd === null || day <= event.dayEnd);
+    if (!dayInRange) return false;
+
+    // If no year constraints, event is active
+    if (event.yearStart === null && event.yearEnd === null) {
+      return event.isRecurring; // Only show if recurring
+    }
+
+    // Check year range
+    const yearStart = event.yearStart || -Infinity;
+    const yearEnd = event.yearEnd || Infinity;
+    return currentYear >= yearStart && currentYear <= yearEnd;
+  };
+
+  // Get events for a specific day
+  const getEventsForDay = (day: number): { holidays: CalendarEvent[], participantEvents: CalendarEvent[], partyEvents: CalendarEvent[] } => {
+    if (!monthEvents) return { holidays: [], participantEvents: [], partyEvents: [] };
+
+    const holidays: CalendarEvent[] = [];
+    const participantEvents: CalendarEvent[] = [];
+    const partyEvents: CalendarEvent[] = [];
+
+    monthEvents.forEach(event => {
+      if (!isEventActiveOnDay(event, day, year)) return;
+      
+      // Apply filters
+      if (event.type === 'holiday' && showHolidays) {
+        holidays.push(event);
+      } else if (event.type === 'participant' && showParticipantEvents) {
+        // Filter by selected participants (if any selected, only show those)
+        if (selectedParticipants.size === 0 || (event.relatedEntity && selectedParticipants.has(event.relatedEntity))) {
+          participantEvents.push(event);
+        }
+      } else if (event.type === 'party' && showPartyEvents) {
+        // Filter by selected parties (if any selected, only show those)
+        if (selectedParties.size === 0 || (event.relatedEntity && selectedParties.has(event.relatedEntity))) {
+          partyEvents.push(event);
+        }
+      }
+    });
+
+    const result = { holidays, participantEvents, partyEvents };
+    if (holidays.length > 0 || participantEvents.length > 0 || partyEvents.length > 0) {
+      console.log(`Events for day ${day}:`, result);
+    }
+    return result;
+  };
+  
+  // Get unique participants and parties from events for filter options
+  const getUniqueEntities = (): { participants: string[], parties: string[] } => {
+    if (!monthEvents) return { participants: [], parties: [] };
+    
+    const participants = new Set<string>();
+    const parties = new Set<string>();
+    
+    monthEvents.forEach(event => {
+      if (event.relatedEntity) {
+        if (event.type === 'participant') {
+          participants.add(event.relatedEntity);
+        } else if (event.type === 'party') {
+          parties.add(event.relatedEntity);
+        }
+      }
+    });
+    
+    return {
+      participants: Array.from(participants).sort(),
+      parties: Array.from(parties).sort()
+    };
+  };
+  
+  const uniqueEntities = getUniqueEntities();
+  
+  const toggleParticipantFilter = (participant: string) => {
+    setSelectedParticipants(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(participant)) {
+        newSet.delete(participant);
+      } else {
+        newSet.add(participant);
+      }
+      return newSet;
+    });
+  };
+  
+  const togglePartyFilter = (party: string) => {
+    setSelectedParties(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(party)) {
+        newSet.delete(party);
+      } else {
+        newSet.add(party);
+      }
+      return newSet;
+    });
+  };
 
   if (isLoading) return <div className="calendar-loading">Loading calendar...</div>;
   if (error) return <div className="calendar-error">Error loading calendar</div>;
@@ -53,6 +211,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
   const calendarDates: CalendarDateDTO[] = [];
   let dayInMonth = 1;
   for (let day = monthConfig.dayStart; day <= monthConfig.dayEnd; day++) {
+    const dayEvents = getEventsForDay(day);
     calendarDates.push({
       calendarTypeCode: monthConfig.calendarTypeCode,
       year: year,
@@ -63,9 +222,9 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
       monthNumber: monthConfig.monthNumber,
       season: monthConfig.season,
       godName: monthConfig.god,
-      holidays: [],
-      participantNotableDates: [],
-      partyNotableDates: [],
+      holidays: dayEvents.holidays,
+      participantNotableDates: dayEvents.participantEvents,
+      partyNotableDates: dayEvents.partyEvents,
     });
     dayInMonth++;
   }
@@ -135,7 +294,15 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
   };
 
   const handleDateClick = (day: number) => {
-    setSelectedDay(selectedDay === day ? null : day);
+    if (selectedDay === day) {
+      // Clicking same day toggles panel off
+      setSelectedDay(null);
+      setShowEventPanel(false);
+    } else {
+      // Clicking new day shows panel
+      setSelectedDay(day);
+      setShowEventPanel(true);
+    }
   };
 
   const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -157,7 +324,12 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
     setIsEditingYear(true);
   };
 
+  const handleRefreshEvents = () => {
+    queryClient.invalidateQueries({ queryKey: ['calendar-month-events'] });
+  };
+
   return (
+    <div className={`calendar-with-events ${showEventPanel ? 'panel-open' : ''}`}>
     <div className="calendar-grid-container">
       <div className="calendar-header">
         <div className="nav-group">
@@ -168,24 +340,42 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
             ← nap
           </button>
         </div>
-        <h2 className="calendar-title">
-          {calendarDates[0]?.monthName} {calendarDates.find(d => d.day === currentDay)?.dayInMonth || 1} - 
-          {isEditingYear ? (
-            <input 
-              type="number" 
-              value={year} 
-              onChange={handleYearChange}
-              onBlur={handleYearBlur}
-              min="1"
-              className="year-input editing"
-              autoFocus
-            />
-          ) : (
-            <span className="year-display" onClick={handleYearClick}>
-              {year}
-            </span>
-          )}
-        </h2>
+        <div className="header-center">
+          <h2 className="calendar-title">
+            {calendarDates[0]?.monthName} {calendarDates.find(d => d.day === currentDay)?.dayInMonth || 1} - 
+            {isEditingYear ? (
+              <input 
+                type="number" 
+                value={year} 
+                onChange={handleYearChange}
+                onBlur={handleYearBlur}
+                min="1"
+                className="year-input editing"
+                autoFocus
+              />
+            ) : (
+              <span className="year-display" onClick={handleYearClick}>
+                {year}
+              </span>
+            )}
+          </h2>
+          <div className="header-actions">
+            <button 
+              onClick={() => setShowFilterPanel(!showFilterPanel)} 
+              className="calendar-nav-btn calendar-filter-btn"
+              title="Szűrők"
+            >
+              🔍 Szűrők
+            </button>
+            <button 
+              onClick={handleRefreshEvents} 
+              className="calendar-nav-btn calendar-filter-btn"
+              title="Események frissítése"
+            >
+              🔄 Frissítés
+            </button>
+          </div>
+        </div>
         <div className="nav-group">
           <button onClick={handleNextDay} className="calendar-nav-btn calendar-nav-btn-day">
             nap →
@@ -195,6 +385,79 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
           </button>
         </div>
       </div>
+
+      {/* Filter Panel */}
+      {showFilterPanel && (
+        <div className="filter-panel">
+          <h3>Esemény szűrők</h3>
+          
+          <div className="filter-section">
+            <h4>Esemény típusok</h4>
+            <label className="filter-checkbox">
+              <input 
+                type="checkbox" 
+                checked={showHolidays}
+                onChange={(e) => setShowHolidays(e.target.checked)}
+              />
+              <span>🗓️ Ünnepnapok</span>
+            </label>
+            <label className="filter-checkbox">
+              <input 
+                type="checkbox" 
+                checked={showParticipantEvents}
+                onChange={(e) => setShowParticipantEvents(e.target.checked)}
+              />
+              <span>👤 Karakter események</span>
+            </label>
+            <label className="filter-checkbox">
+              <input 
+                type="checkbox" 
+                checked={showPartyEvents}
+                onChange={(e) => setShowPartyEvents(e.target.checked)}
+              />
+              <span>👥 Csapat események</span>
+            </label>
+          </div>
+
+          {showParticipantEvents && uniqueEntities.participants.length > 0 && (
+            <div className="filter-section">
+              <h4>Karakterek</h4>
+              <div className="filter-hint">
+                {selectedParticipants.size === 0 ? 'Mind megjelenítve' : `${selectedParticipants.size} kiválasztva`}
+              </div>
+              {uniqueEntities.participants.map(participant => (
+                <label key={participant} className="filter-checkbox">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedParticipants.has(participant)}
+                    onChange={() => toggleParticipantFilter(participant)}
+                  />
+                  <span>{participant}</span>
+                </label>
+              ))}
+            </div>
+          )}
+
+          {showPartyEvents && uniqueEntities.parties.length > 0 && (
+            <div className="filter-section">
+              <h4>Csapatok</h4>
+              <div className="filter-hint">
+                {selectedParties.size === 0 ? 'Mind megjelenítve' : `${selectedParties.size} kiválasztva`}
+              </div>
+              {uniqueEntities.parties.map(party => (
+                <label key={party} className="filter-checkbox">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedParties.has(party)}
+                    onChange={() => togglePartyFilter(party)}
+                  />
+                  <span>{party}</span>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="calendar-months">
         <div key={currentDay} className="calendar-month">
@@ -221,6 +484,26 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
                   onClick={() => handleDateClick(date.day)}
                 >
                   <div className="date-number">{date.dayInMonth}</div>
+                  
+                  {/* Display event names on the calendar day */}
+                  <div className="event-names">
+                    {date.holidays.map((event) => (
+                      <div key={event.id} className="event-name holiday-name">
+                        {event.eventName}
+                      </div>
+                    ))}
+                    {date.participantNotableDates.map((event) => (
+                      <div key={event.id} className="event-name participant-name">
+                        {event.eventName}
+                      </div>
+                    ))}
+                    {date.partyNotableDates.map((event) => (
+                      <div key={event.id} className="event-name party-name">
+                        {event.eventName}
+                      </div>
+                    ))}
+                  </div>
+                  
                   {(date.holidays.length > 0 ||
                     date.participantNotableDates.length > 0 ||
                     date.partyNotableDates.length > 0) && (
@@ -277,7 +560,36 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
               </div>
             )}
           </div>
+        </div>
       </div>
+    
+    {/* Event Panel */}
+    {showEventPanel && selectedDay && (
+      <div className="event-panel">
+        <div className="event-panel-header">
+          <button 
+            onClick={() => setShowEventPanel(false)}
+            className="btn-toggle-panel"
+            title="Esemény panel bezárása"
+          >
+            ✕
+          </button>
+        </div>
+        <EventManager
+          calendarTypeCode={calendarTypeCode}
+          year={year}
+          day={selectedDay}
+          onClose={() => {
+            setShowEventPanel(false);
+            setSelectedDay(null);
+          }}
+          onEventChange={() => {
+            // Refresh events when an event is created/modified/deleted
+            queryClient.invalidateQueries({ queryKey: ['calendar-month-events'] });
+          }}
+        />
+      </div>
+    )}
     </div>
   );
 };
