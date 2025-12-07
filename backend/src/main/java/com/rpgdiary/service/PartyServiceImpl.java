@@ -110,6 +110,7 @@ public class PartyServiceImpl implements PartyService {
     }
 
     @Override
+    @Transactional
     public void addMemberToParty(Long partyId, Long participantId) {
         Party party = partyRepository.findById(partyId)
                 .orElseThrow(() -> new PartyNotFoundException("id: " + partyId));

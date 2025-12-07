@@ -3,8 +3,11 @@ package com.rpgdiary.model;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -45,7 +48,12 @@ public class Party {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    @ManyToMany(mappedBy = "parties")
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "party_participants",
+            joinColumns = @JoinColumn(name = "party_id"),
+            inverseJoinColumns = @JoinColumn(name = "participant_id")
+    )
     private Set<Participant> members = new HashSet<>();
 
     @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = true)

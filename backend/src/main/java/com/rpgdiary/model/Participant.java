@@ -50,15 +50,6 @@ public class Participant {
     @OneToMany(mappedBy = "participant", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ParticipantNotableDate> notableDates;
 
-    @ManyToMany
-    @JoinTable(
-            name = "party_members",
-            joinColumns = @JoinColumn(name = "participant_id"),
-            inverseJoinColumns = @JoinColumn(name = "party_id")
-    )
-    private Set<Party> parties;
-
-
     public static ParticipantBuilder builder() {
         return new ParticipantBuilder();
     }
@@ -69,7 +60,6 @@ public class Participant {
         private String name;
         private String description;
         private Set<ParticipantNotableDate> notableDates;
-        private Set<Party> parties;
 
         public ParticipantBuilder id(Long id) {
             this.id = id;
@@ -96,13 +86,8 @@ public class Participant {
             return this;
         }
 
-        public ParticipantBuilder parties(Set<Party> parties) {
-            this.parties = parties;
-            return this;
-        }
-
         public Participant build() {
-            return new Participant(id, type, name, description, null, null, notableDates, parties);
+            return new Participant(id, type, name, description, null, null, notableDates);
         }
     }
 }

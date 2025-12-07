@@ -43,7 +43,7 @@ CREATE TABLE parties (
 );
 
 -- Party Members
-CREATE TABLE party_members (
+CREATE TABLE party_participants (
     party_id BIGSERIAL NOT NULL,
     participant_id BIGSERIAL NOT NULL,
     PRIMARY KEY (party_id, participant_id),
@@ -165,3 +165,4 @@ INSERT INTO participants (name, type, description) VALUES
 -- Insert Sample Holiday for Pyarr (Day 1 of Year 1)
 INSERT INTO participant_notable_date (participant_id, calendar_type_code, year, day, day_end, event_name, description, is_recurring, year_start) VALUES
     (1, 'pyarr', NULL, 16, 20, 'Teremtő akarat ünnepe', 'egy hetes ünnep', TRUE, 1);
+
