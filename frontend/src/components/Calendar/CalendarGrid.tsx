@@ -78,20 +78,36 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
       // Execute all requests in parallel
       const responses = await Promise.all(dayRequests);
       
-      // Collect events from all responses
+      // Collect events from all responses, preserving their correct type
       responses.forEach(response => {
         if (response?.data) {
           const dateData = response.data;
-          [...dateData.holidays, ...dateData.participantNotableDates, ...dateData.partyNotableDates].forEach(event => {
+          
+          // Add events from each array with the correct type
+          dateData.holidays.forEach(event => {
             if (!seenEventIds.has(event.id)) {
               seenEventIds.add(event.id);
-              allEvents.push(event);
+              allEvents.push({ ...event, type: 'holiday' as const });
+            }
+          });
+          
+          dateData.participantNotableDates.forEach(event => {
+            if (!seenEventIds.has(event.id)) {
+              seenEventIds.add(event.id);
+              allEvents.push({ ...event, type: 'participant' as const });
+            }
+          });
+          
+          dateData.partyNotableDates.forEach(event => {
+            if (!seenEventIds.has(event.id)) {
+              seenEventIds.add(event.id);
+              allEvents.push({ ...event, type: 'party' as const });
             }
           });
         }
       });
       
-      console.log('Fetched events for month:', allEvents);
+      console.log('Fetched events for month:', allEvents.length, 'events');
       return allEvents;
     },
     enabled: !!currentMonthConfig,
@@ -107,17 +123,23 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
   const isEventActiveOnDay = (event: CalendarEvent, day: number, currentYear: number): boolean => {
     // Check if day is in range
     const dayInRange = day >= event.dayStart && (event.dayEnd === null || day <= event.dayEnd);
-    if (!dayInRange) return false;
+    if (!dayInRange) {
+      return false;
+    }
 
-    // If no year constraints, event is active
+    // If no year constraints, check if it's recurring or just show it
     if (event.yearStart === null && event.yearEnd === null) {
-      return event.isRecurring; // Only show if recurring
+      // For events without year constraints, show them if they're recurring
+      // OR if no year info is specified at all (default behavior for holidays)
+      return true; // Changed: show all events without year constraints on their days
     }
 
     // Check year range
     const yearStart = event.yearStart || -Infinity;
     const yearEnd = event.yearEnd || Infinity;
-    return currentYear >= yearStart && currentYear <= yearEnd;
+    const inYearRange = currentYear >= yearStart && currentYear <= yearEnd;
+    
+    return inYearRange;
   };
 
   // Get events for a specific day
@@ -147,11 +169,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
       }
     });
 
-    const result = { holidays, participantEvents, partyEvents };
-    if (holidays.length > 0 || participantEvents.length > 0 || partyEvents.length > 0) {
-      console.log(`Events for day ${day}:`, result);
-    }
-    return result;
+    return { holidays, participantEvents, partyEvents };
   };
   
   // Get unique participants and parties from events for filter options
@@ -212,6 +230,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
   let dayInMonth = 1;
   for (let day = monthConfig.dayStart; day <= monthConfig.dayEnd; day++) {
     const dayEvents = getEventsForDay(day);
+    
     calendarDates.push({
       calendarTypeCode: monthConfig.calendarTypeCode,
       year: year,
@@ -219,9 +238,6 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
       dayInMonth: dayInMonth, // Day within month
       dayOfWeek: ((day - 1) % 5) + 1, // 5-day weeks
       monthName: monthConfig.monthName,
-      monthNumber: monthConfig.monthNumber,
-      season: monthConfig.season,
-      godName: monthConfig.god,
       holidays: dayEvents.holidays,
       participantNotableDates: dayEvents.participantEvents,
       partyNotableDates: dayEvents.partyEvents,

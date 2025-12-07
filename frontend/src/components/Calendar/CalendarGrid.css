@@ -260,10 +260,6 @@
   box-shadow: 0 0 0 1px var(--color-primary);
 }
 
-.calendar-date.has-holiday {
-  border-left: 4px solid #ef4444;
-}
-
 .calendar-date.has-participant {
   border-top: 4px solid #22c55e;
 }
