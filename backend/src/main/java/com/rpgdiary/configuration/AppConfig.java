@@ -2,6 +2,7 @@ package com.rpgdiary.configuration;
 
 import com.rpgdiary.converter.CalendarConfigToDTOConverter;
 import com.rpgdiary.converter.CalendarTypeToDTOConverter;
+import com.rpgdiary.converter.ParticipantDTOToParticipantConverter;
 import com.rpgdiary.converter.ParticipantNotableDateToDTOConverter;
 import com.rpgdiary.converter.ParticipantNotableEventToCalendarEventDtoConverter;
 import com.rpgdiary.converter.ParticipantToDTOConverter;
@@ -22,6 +23,7 @@ public class AppConfig {
     private final ParticipantToDTOConverter participantToDTOConverter = new ParticipantToDTOConverter();
     private final ParticipantNotableDateToDTOConverter participantNotableDateToDTOConverter = new ParticipantNotableDateToDTOConverter();
     private final PartyToDTOConverter partyToDTOConverter = new PartyToDTOConverter();
+    private final ParticipantDTOToParticipantConverter participantDTOToParticipantConverter = new ParticipantDTOToParticipantConverter();
 
     @Bean
     @Lazy
@@ -35,6 +37,7 @@ public class AppConfig {
         conversionService.addConverter(participantToDTOConverter);
         conversionService.addConverter(participantNotableDateToDTOConverter);
         conversionService.addConverter(partyToDTOConverter);
+        conversionService.addConverter(participantDTOToParticipantConverter);
 
         return conversionService;
     }

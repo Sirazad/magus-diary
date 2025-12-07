@@ -10,8 +10,9 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -23,7 +24,8 @@ import static jakarta.persistence.GenerationType.IDENTITY;
 @Entity
 @Table(name = "participants")
 @Data
-@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Participant {
 
     @Id
@@ -56,4 +58,51 @@ public class Participant {
     )
     private Set<Party> parties;
 
+
+    public static ParticipantBuilder builder() {
+        return new ParticipantBuilder();
+    }
+
+    public static class ParticipantBuilder {
+        private Long id;
+        private String type;
+        private String name;
+        private String description;
+        private Set<ParticipantNotableDate> notableDates;
+        private Set<Party> parties;
+
+        public ParticipantBuilder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public ParticipantBuilder type(String type) {
+            this.type = type;
+            return this;
+        }
+
+        public ParticipantBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public ParticipantBuilder description(String description) {
+            this.description = description;
+            return this;
+        }
+
+        public ParticipantBuilder notableDates(Set<ParticipantNotableDate> notableDates) {
+            this.notableDates = notableDates;
+            return this;
+        }
+
+        public ParticipantBuilder parties(Set<Party> parties) {
+            this.parties = parties;
+            return this;
+        }
+
+        public Participant build() {
+            return new Participant(id, type, name, description, null, null, notableDates, parties);
+        }
+    }
 }
