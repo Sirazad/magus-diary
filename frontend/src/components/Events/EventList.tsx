@@ -2,6 +2,8 @@ import React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api';
 import type { CalendarEvent, CalendarDateDTO } from '../../types/Calendar';
+import { LoadingSpinner } from '../Common/LoadingSpinner';
+import { ErrorAlert } from '../Common/ErrorAlert';
 import './EventList.css';
 
 interface EventListProps {
@@ -52,9 +54,15 @@ export const EventList: React.FC<EventListProps> = ({
     },
   });
 
-  if (isLoading) return <div className="event-list-loading">Loading events...</div>;
+  if (isLoading) return <LoadingSpinner size="small" message="Események betöltése..." />;
   if (!events || events.length === 0) {
-    return <div className="event-list-empty">No events on this date</div>;
+    return (
+      <ErrorAlert 
+        type="info" 
+        title="Nincs esemény"
+        message="Ezen a napon nincs esemény"
+      />
+    );
   }
 
   return (

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api';
 import type { ParticipantDTO } from '../../types/Participant';
+import { LoadingSpinner } from '../Common/LoadingSpinner';
+import { ErrorAlert } from '../Common/ErrorAlert';
 import './ParticipantList.css';
 
 export const ParticipantList: React.FC = () => {
@@ -102,8 +104,13 @@ export const ParticipantList: React.FC = () => {
     }
   };
 
-  if (isLoading) return <div className="participant-loading">Loading karakterek...</div>;
-  if (error) return <div className="participant-error">Error loading karakterek</div>;
+  if (isLoading) return <LoadingSpinner message="Karakterek betöltése..." />;
+  if (error) return (
+    <ErrorAlert 
+      message="Nem sikerült betölteni a karaktereket"
+      onDismiss={() => refetch()}
+    />
+  );
 
   // Filter participants locally based on search criteria
   const filteredParticipants = participants?.filter(participant => {

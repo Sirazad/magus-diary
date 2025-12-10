@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api';
 import type { PartyDTO } from '../../types/Party';
 import type { ParticipantDTO } from '../../types/Participant';
+import { LoadingSpinner } from '../Common/LoadingSpinner';
+import { ErrorAlert } from '../Common/ErrorAlert';
 import './PartyList.css';
 
 export const PartyList: React.FC = () => {
@@ -10,7 +12,6 @@ export const PartyList: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [newPartyName, setNewPartyName] = useState('');
   const [newPartyDescription, setNewPartyDescription] = useState('');
-  const [selectedPartyId, setSelectedPartyId] = useState<number | null>(null);
   const [showMembersForParty, setShowMembersForParty] = useState<number | null>(null);
   const [editingPartyId, setEditingPartyId] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
@@ -62,7 +63,7 @@ export const PartyList: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['parties'] });
-      setSelectedPartyId(null);
+      setShowMembersForParty(null);
     },
   });
 
@@ -185,11 +186,16 @@ export const PartyList: React.FC = () => {
   const availableMembers = participants?.filter((p) => !memberIdsSet.has(p.id)) || [];
 
   if (partiesLoading || participantsLoading) {
-    return <div className="party-loading">Loading parties...</div>;
+    return <LoadingSpinner message="Partik betöltése..." />;
   }
 
   if (partiesError) {
-    return <div className="party-error">Error loading parties</div>;
+    return (
+      <ErrorAlert 
+        message="Nem sikerült betölteni a partikat"
+        onDismiss={() => refetchParties()}
+      />
+    );
   }
 
   return (

@@ -3,6 +3,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api';
 import type { CalendarDateDTO, MonthConfigDTO, CalendarEvent } from '../../types/Calendar';
 import { EventManager } from '../Events/EventManager';
+import { LoadingSpinner } from '../Common/LoadingSpinner';
+import { ErrorAlert } from '../Common/ErrorAlert';
 import './CalendarGrid.css';
 
 interface CalendarGridProps {
@@ -221,9 +223,20 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
     });
   };
 
-  if (isLoading) return <div className="calendar-loading">Loading calendar...</div>;
-  if (error) return <div className="calendar-error">Error loading calendar</div>;
-  if (!monthConfig) return <div className="calendar-empty">No calendar data</div>;
+  if (isLoading) return <LoadingSpinner message="Naptár betöltése..." />;
+  if (error) return (
+    <ErrorAlert 
+      message="Nem sikerült betölteni a naptárt" 
+      details={(error as Error)?.message}
+    />
+  );
+  if (!monthConfig) return (
+    <ErrorAlert 
+      type="info"
+      title="Nincs adat"
+      message="Nincs elérhető naptár adat ehhez az időszakhoz"
+    />
+  );
 
   // Generate calendar dates from month config
   const calendarDates: CalendarDateDTO[] = [];
@@ -238,6 +251,9 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
       dayInMonth: dayInMonth, // Day within month
       dayOfWeek: ((day - 1) % 5) + 1, // 5-day weeks
       monthName: monthConfig.monthName,
+      monthNumber: monthConfig.monthNumber,
+      season: monthConfig.season,
+      godName: monthConfig.god,
       holidays: dayEvents.holidays,
       participantNotableDates: dayEvents.participantEvents,
       partyNotableDates: dayEvents.partyEvents,
