@@ -103,24 +103,24 @@ export const EventForm: React.FC<EventFormProps> = ({
         }
       } else if (eventType === 'participant') {
         if (eventId) {
-          return apiClient.put(`/participants/notable-dates/${eventId}`, {
+          return apiClient.put(`/participant-notable-dates/${eventId}`, {
             ...data,
             calendarTypeCode,
           });
         } else {
-          return apiClient.post('/participants/notable-dates', {
+          return apiClient.post('/participant-notable-dates', {
             ...data,
             calendarTypeCode,
           });
         }
       } else if (eventType === 'party') {
         if (eventId) {
-          return apiClient.put(`/parties/notable-dates/${eventId}`, {
+          return apiClient.put(`/party-notable-dates/${eventId}`, {
             ...data,
             calendarTypeCode,
           });
         } else {
-          return apiClient.post('/parties/notable-dates', {
+          return apiClient.post('/party-notable-dates', {
             ...data,
             calendarTypeCode,
           });

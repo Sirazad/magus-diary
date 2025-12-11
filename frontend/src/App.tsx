@@ -6,7 +6,18 @@ import { PartyList } from './components/Party/PartyList';
 import { ParticipantList } from './components/Participant/ParticipantList';
 import './App.css';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
+      retry: 1,
+    },
+  },
+});
+
+console.log('QueryClient initialized with refetchOnWindowFocus:', false);
 
 function App() {
   const [selectedCalendar, setSelectedCalendar] = useState('pyarr');

@@ -50,6 +50,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
       }
       return Promise.all(monthPromises);
     },
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   // Find the month that contains the current day
@@ -115,6 +117,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
     enabled: !!currentMonthConfig,
     staleTime: Infinity, // Never automatically refetch
     gcTime: 60 * 60 * 1000, // Keep in cache for 1 hour
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   const isLoading = !allMonthConfigs;

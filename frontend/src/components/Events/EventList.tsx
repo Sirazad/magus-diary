@@ -43,9 +43,9 @@ export const EventList: React.FC<EventListProps> = ({
       if (eventType === 'holiday') {
         return apiClient.delete(`/calendar/events/${eventId}`);
       } else if (eventType === 'participant') {
-        return apiClient.delete(`/participants/notable-dates/${eventId}`);
+        return apiClient.delete(`/participant-notable-dates/${eventId}`);
       } else if (eventType === 'party') {
-        return apiClient.delete(`/parties/notable-dates/${eventId}`);
+        return apiClient.delete(`/party-notable-dates/${eventId}`);
       }
     },
     onSuccess: () => {
