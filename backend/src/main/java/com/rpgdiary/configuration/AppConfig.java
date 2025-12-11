@@ -6,12 +6,15 @@ import com.rpgdiary.converter.ParticipantDTOToParticipantConverter;
 import com.rpgdiary.converter.ParticipantNotableDateToDTOConverter;
 import com.rpgdiary.converter.ParticipantNotableEventToCalendarEventDtoConverter;
 import com.rpgdiary.converter.ParticipantToDTOConverter;
+import com.rpgdiary.converter.PartyNotableDateToDTOConverter;
 import com.rpgdiary.converter.PartyNotableEventToCalendarEventDtoConverter;
 import com.rpgdiary.converter.PartyToDTOConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.format.support.FormattingConversionService;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class AppConfig {
@@ -24,6 +27,7 @@ public class AppConfig {
     private final ParticipantNotableDateToDTOConverter participantNotableDateToDTOConverter = new ParticipantNotableDateToDTOConverter();
     private final PartyToDTOConverter partyToDTOConverter = new PartyToDTOConverter();
     private final ParticipantDTOToParticipantConverter participantDTOToParticipantConverter = new ParticipantDTOToParticipantConverter();
+    private final PartyNotableDateToDTOConverter partyNotableDateToDTOConverter = new PartyNotableDateToDTOConverter();
 
     @Bean
     @Lazy
@@ -38,7 +42,23 @@ public class AppConfig {
         conversionService.addConverter(participantNotableDateToDTOConverter);
         conversionService.addConverter(partyToDTOConverter);
         conversionService.addConverter(participantDTOToParticipantConverter);
+        conversionService.addConverter(partyNotableDateToDTOConverter);
 
         return conversionService;
+    }
+
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/api/**")
+                        .allowedOrigins("http://localhost:5173")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedHeaders("*")
+                        .allowCredentials(true)
+                        .maxAge(3600);
+            }
+        };
     }
 }

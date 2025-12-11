@@ -7,8 +7,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -19,7 +20,8 @@ import static jakarta.persistence.GenerationType.IDENTITY;
 @Entity
 @Table(name = "party_notable_date")
 @Data
-@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PartyNotableDate {
 
     @Id
@@ -63,4 +65,108 @@ public class PartyNotableDate {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    public static PartyNotableDateBuilder builder() {
+        return new PartyNotableDateBuilder();
+    }
+
+    @NoArgsConstructor
+    public static class PartyNotableDateBuilder {
+        private Long id;
+        private Party party;
+        private CalendarType calendarType;
+        private Integer year;
+        private int day;
+        private Integer dayEnd;
+        private String eventName;
+        private String description;
+        private boolean isRecurring = false;
+        private Integer yearStart;
+        private Integer yearEnd;
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
+
+        public PartyNotableDateBuilder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public PartyNotableDateBuilder party(Party party) {
+            this.party = party;
+            return this;
+        }
+
+        public PartyNotableDateBuilder calendarType(CalendarType calendarType) {
+            this.calendarType = calendarType;
+            return this;
+        }
+
+        public PartyNotableDateBuilder year(Integer year) {
+            this.year = year;
+            return this;
+        }
+
+        public PartyNotableDateBuilder day(Integer day) {
+            this.day = day;
+            return this;
+        }
+
+        public PartyNotableDateBuilder dayEnd(Integer dayEnd) {
+            this.dayEnd = dayEnd;
+            return this;
+        }
+
+        public PartyNotableDateBuilder eventName(String eventName) {
+            this.eventName = eventName;
+            return this;
+        }
+
+        public PartyNotableDateBuilder description(String description) {
+            this.description = description;
+            return this;
+        }
+
+        public PartyNotableDateBuilder isRecurring(boolean isRecurring) {
+            this.isRecurring = isRecurring;
+            return this;
+        }
+
+        public PartyNotableDateBuilder yearStart(Integer yearStart) {
+            this.yearStart = yearStart;
+            return this;
+        }
+
+        public PartyNotableDateBuilder yearEnd(Integer yearEnd) {
+            this.yearEnd = yearEnd;
+            return this;
+        }
+
+        public PartyNotableDateBuilder createdAt(LocalDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public PartyNotableDateBuilder updatedAt(LocalDateTime updatatedAt) {
+            this.updatedAt = updatatedAt;
+            return this;
+        }
+
+        public PartyNotableDate build() {
+            return new PartyNotableDate(
+                    id,
+                    party,
+                    calendarType,
+                    year,
+                    day,
+                    dayEnd,
+                    eventName,
+                    description,
+                    isRecurring,
+                    yearStart,
+                    yearEnd,
+                    createdAt,
+                    updatedAt
+            );
+        }
+    }
 }

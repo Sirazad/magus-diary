@@ -68,7 +68,6 @@ CREATE TABLE participant_notable_date (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (participant_id) REFERENCES participants(id) ON DELETE CASCADE,
     FOREIGN KEY (calendar_type_code) REFERENCES calendar_types(code),
-    UNIQUE(participant_id, calendar_type_code, year, day)
 );
 
 -- Party Notable Dates
@@ -88,7 +87,6 @@ CREATE TABLE party_notable_date (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE,
     FOREIGN KEY (calendar_type_code) REFERENCES calendar_types(code),
-    UNIQUE(party_id, calendar_type_code, year, day)
 );
 
 -- Indexes
