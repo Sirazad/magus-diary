@@ -9,10 +9,12 @@ public class ParticipantNotableDateToDTOConverter implements Converter<Participa
     //TODO participantId?
     @Override
     public ParticipantNotableDateDTO convert(ParticipantNotableDate from) {
+        Long participantId = from.getParticipant() != null ? from.getParticipant().getId() : null;
+        String calendarTypeCode = from.getCalendarType() != null ? from.getCalendarType().getCode() : null;
         return ParticipantNotableDateDTO.builder()
                 .id(from.getId())
-//                .participantId(from.getPartycipant().getId())
-                .calendarTypeCode(from.getCalendarType().getCode())
+                .participantId(participantId)
+                .calendarTypeCode(calendarTypeCode)
                 .year(from.getYear())
                 .day(from.getDay())
                 .dayEnd(from.getDayEnd())
