@@ -41,7 +41,7 @@ export const EventList: React.FC<EventListProps> = ({
   const deleteMutation = useMutation({
     mutationFn: async ({ eventId, eventType }: { eventId: number; eventType: string }) => {
       if (eventType === 'holiday') {
-        return apiClient.delete(`/calendar/events/${eventId}`);
+        return apiClient.delete(`/participant-notable-dates/${eventId}`);
       } else if (eventType === 'participant') {
         return apiClient.delete(`/participant-notable-dates/${eventId}`);
       } else if (eventType === 'party') {

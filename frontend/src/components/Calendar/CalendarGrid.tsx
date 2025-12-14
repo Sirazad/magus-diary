@@ -14,6 +14,7 @@ interface CalendarGridProps {
 export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) => {
   const [year, setYear] = useState(3698);
   const [currentDay, setCurrentDay] = useState(161); // Default to day 161 (month 9, day 1)
+  const [currentMonthNumber, setCurrentMonthNumber] = useState(9); // Month 9 contains day 161
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [isEditingYear, setIsEditingYear] = useState(false);
   const [showEventPanel, setShowEventPanel] = useState(false);
@@ -30,34 +31,31 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
   
   const queryClient = useQueryClient();
 
-  // Fetch all month configurations to find which month contains currentDay
-  const { data: allMonthConfigs } = useQuery({
-    queryKey: ['calendar-all-months', calendarTypeCode],
+  // Fetch only the current month configuration
+  const { data: currentMonthConfig } = useQuery({
+    queryKey: ['calendar-month-config', calendarTypeCode, currentMonthNumber],
     queryFn: async () => {
-      const response = await apiClient.get<number>(
-        `/calendar/types/${calendarTypeCode}/months`
+      const response = await apiClient.get<MonthConfigDTO>(
+        `/calendar/config/${calendarTypeCode}/${currentMonthNumber}`
       );
-      const totalMonths = response.data;
-      
-      // Fetch all month configs
-      const monthPromises = [];
-      for (let i = 1; i <= totalMonths; i++) {
-        monthPromises.push(
-          apiClient.get<MonthConfigDTO>(
-            `/calendar/config/${calendarTypeCode}/${i}`
-          ).then(res => res.data)
-        );
-      }
-      return Promise.all(monthPromises);
+      return response.data;
     },
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
 
-  // Find the month that contains the current day
-  const currentMonthConfig = allMonthConfigs?.find(
-    config => currentDay >= config.dayStart && currentDay <= config.dayEnd
-  );
+  // Fetch total months for navigation (lazy loaded)
+  const { data: totalMonths } = useQuery({
+    queryKey: ['calendar-total-months', calendarTypeCode],
+    queryFn: async () => {
+      const response = await apiClient.get<number>(
+        `/calendar/types/${calendarTypeCode}/months`
+      );
+      return response.data;
+    },
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
 
   // Fetch all events for the current month
   const { data: monthEvents } = useQuery({
@@ -115,13 +113,13 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
       return allEvents;
     },
     enabled: !!currentMonthConfig,
-    staleTime: Infinity, // Never automatically refetch
+    staleTime: 0, // Allow refetch when invalidated
     gcTime: 60 * 60 * 1000, // Keep in cache for 1 hour
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
 
-  const isLoading = !allMonthConfigs;
+  const isLoading = !currentMonthConfig;
   const error = false;
   const monthConfig = currentMonthConfig;
 
@@ -266,66 +264,59 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
   }
 
   const handlePreviousMonth = () => {
-    if (!allMonthConfigs || !currentMonthConfig) return;
+    if (!currentMonthConfig || !totalMonths) return;
     
-    const currentMonthIndex = allMonthConfigs.findIndex(
-      config => config.monthNumber === currentMonthConfig.monthNumber
-    );
-    
-    if (currentMonthIndex > 0) {
-      // Go to first day of previous month
-      const prevMonthConfig = allMonthConfigs[currentMonthIndex - 1];
-      setCurrentDay(prevMonthConfig.dayStart);
+    if (currentMonthNumber > 1) {
+      // Go to previous month
+      setCurrentMonthNumber(currentMonthNumber - 1);
     } else {
       // Wrap to previous year, last month
       setYear(year - 1);
-      const lastMonthConfig = allMonthConfigs[allMonthConfigs.length - 1];
-      setCurrentDay(lastMonthConfig.dayStart);
+      setCurrentMonthNumber(totalMonths);
     }
   };
 
   const handleNextMonth = () => {
-    if (!allMonthConfigs || !currentMonthConfig) return;
+    if (!currentMonthConfig || !totalMonths) return;
     
-    const currentMonthIndex = allMonthConfigs.findIndex(
-      config => config.monthNumber === currentMonthConfig.monthNumber
-    );
-    
-    if (currentMonthIndex < allMonthConfigs.length - 1) {
-      // Go to first day of next month
-      const nextMonthConfig = allMonthConfigs[currentMonthIndex + 1];
-      setCurrentDay(nextMonthConfig.dayStart);
+    if (currentMonthNumber < totalMonths) {
+      // Go to next month
+      setCurrentMonthNumber(currentMonthNumber + 1);
     } else {
       // Wrap to next year, first month
       setYear(year + 1);
-      const firstMonthConfig = allMonthConfigs[0];
-      setCurrentDay(firstMonthConfig.dayStart);
+      setCurrentMonthNumber(1);
     }
   };
 
   const handlePreviousDay = () => {
-    if (!allMonthConfigs) return;
+    if (!currentMonthConfig || !totalMonths) return;
     
-    if (currentDay > 1) {
+    if (currentDay > currentMonthConfig.dayStart) {
       setCurrentDay(currentDay - 1);
+    } else if (currentMonthNumber > 1) {
+      // Go to previous month, last day - need to fetch previous month config
+      setCurrentMonthNumber(currentMonthNumber - 1);
     } else {
-      // Wrap to previous year, last day
+      // Wrap to previous year, last month
       setYear(year - 1);
-      const lastMonthConfig = allMonthConfigs[allMonthConfigs.length - 1];
-      setCurrentDay(lastMonthConfig.dayEnd);
+      setCurrentMonthNumber(totalMonths);
     }
   };
 
   const handleNextDay = () => {
-    if (!allMonthConfigs) return;
+    if (!currentMonthConfig || !totalMonths) return;
     
-    const lastMonthConfig = allMonthConfigs[allMonthConfigs.length - 1];
-    if (currentDay < lastMonthConfig.dayEnd) {
+    if (currentDay < currentMonthConfig.dayEnd) {
       setCurrentDay(currentDay + 1);
+    } else if (currentMonthNumber < totalMonths) {
+      // Go to next month, first day
+      setCurrentMonthNumber(currentMonthNumber + 1);
+      // currentDay will be updated when new month config loads
     } else {
-      // Wrap to next year, first day
+      // Wrap to next year, first month
       setYear(year + 1);
-      setCurrentDay(1);
+      setCurrentMonthNumber(1);
     }
   };
 
@@ -361,7 +352,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
   };
 
   const handleRefreshEvents = () => {
-    queryClient.invalidateQueries({ queryKey: ['calendar-month-events'] });
+    queryClient.refetchQueries({ queryKey: ['calendar-month-events'] });
   };
 
   return (
@@ -621,7 +612,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
           }}
           onEventChange={() => {
             // Refresh events when an event is created/modified/deleted
-            queryClient.invalidateQueries({ queryKey: ['calendar-month-events'] });
+            queryClient.refetchQueries({ queryKey: ['calendar-month-events'] });
           }}
         />
       </div>

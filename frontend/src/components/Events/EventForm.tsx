@@ -73,9 +73,9 @@ export const EventForm: React.FC<EventFormProps> = ({
   // Fetch existing event if editing
   useEffect(() => {
     if (eventId && eventType === 'holiday') {
-      // Fetch holiday event
+      // Fetch holiday event (stored as participant notable date)
       apiClient
-        .get(`/calendar/events/${eventId}`)
+        .get(`/participant-notable-dates/${eventId}`)
         .then((res) => {
           setFormData((prev) => ({
             ...prev,
@@ -90,15 +90,21 @@ export const EventForm: React.FC<EventFormProps> = ({
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
       if (eventType === 'holiday') {
+        // Holidays are stored as participant notable dates
+        // PyarrCalendar (ID 1) for 'pyarr', KyrCalendar (ID 2) for 'kyr'
+        const calendarParticipantId = calendarTypeCode === 'pyarr' ? 1 : 2;
+        
         if (eventId) {
-          return apiClient.put(`/calendar/events/${eventId}`, {
+          return apiClient.put(`/participant-notable-dates/${eventId}`, {
             ...data,
             calendarTypeCode,
+            participantId: calendarParticipantId,
           });
         } else {
-          return apiClient.post('/calendar/events', {
+          return apiClient.post('/participant-notable-dates', {
             ...data,
             calendarTypeCode,
+            participantId: calendarParticipantId,
           });
         }
       } else if (eventType === 'participant') {
