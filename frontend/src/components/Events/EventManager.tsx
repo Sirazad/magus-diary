@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { EventForm } from './EventForm';
 import { EventList } from './EventList';
+import type { CalendarEvent } from '../../types/Calendar';
 import './EventManager.css';
 
 interface EventManagerProps {
@@ -9,6 +10,7 @@ interface EventManagerProps {
   day: number;
   onClose: () => void;
   onEventChange?: () => void;
+  events?: CalendarEvent[];
 }
 
 export const EventManager: React.FC<EventManagerProps> = ({
@@ -17,6 +19,7 @@ export const EventManager: React.FC<EventManagerProps> = ({
   day,
   onClose,
   onEventChange,
+  events = [],
 }) => {
   const [activeTab, setActiveTab] = useState<'holiday' | 'participant' | 'party'>('holiday');
   const [editingEventId, setEditingEventId] = useState<number | undefined>();
@@ -91,6 +94,7 @@ export const EventManager: React.FC<EventManagerProps> = ({
               day={day}
               onEdit={handleEdit}
               onEventChange={onEventChange}
+              events={events}
             />
           </>
         ) : (
