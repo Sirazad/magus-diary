@@ -1,5 +1,6 @@
 package com.rpgdiary.service;
 
+import com.querydsl.core.types.Predicate;
 import com.rpgdiary.dto.ParticipantDTO;
 import com.rpgdiary.dto.ParticipantNotableDateDTO;
 import com.rpgdiary.exception.CalendarNotFoundException;
@@ -7,6 +8,8 @@ import com.rpgdiary.exception.ParticipantNotFoundException;
 import com.rpgdiary.model.CalendarType;
 import com.rpgdiary.model.Participant;
 import com.rpgdiary.model.ParticipantNotableDate;
+import com.rpgdiary.model.PartyNotableDate;
+import com.rpgdiary.model.QParticipantNotableDate;
 import com.rpgdiary.repository.CalendarTypeRepository;
 import com.rpgdiary.repository.ParticipantNotableDateRepository;
 import com.rpgdiary.repository.ParticipantRepository;
@@ -105,6 +108,31 @@ public class ParticipantServiceImpl implements ParticipantService {
 
         return participantNotableDateRepository.findByParticipantAndCalendarType(participant, calendarType)
                 .stream()
+                .map(this::convert)
+                .toList();
+    }
+
+    @Override
+    public List<ParticipantNotableDateDTO> getDateForTimeRangeAndParticipant(Long participantId, String calendarTypeCode, int year, int startDate, int endDate) {
+        var participant = participantRepository.findById(participantId)
+                .orElseThrow(() -> new ParticipantNotFoundException("id: " + participantId));
+
+        var calendarType = calendarTypeRepository.findById(calendarTypeCode)
+                .orElseThrow(() -> new CalendarNotFoundException(calendarTypeCode));
+
+        var qParticipantNotableDate = QParticipantNotableDate.participantNotableDate;
+
+        Predicate pNDForTimeRange = qParticipantNotableDate.calendarType.eq(calendarType)
+                .and(qParticipantNotableDate.participant.id.eq(participant.getId()))
+                .and(qParticipantNotableDate.day.between(startDate, endDate))
+                .and(qParticipantNotableDate.year.eq(year)
+                    .or(qParticipantNotableDate.isRecurring.isTrue()
+                        .and(qParticipantNotableDate.yearStart.loe(year).or(qParticipantNotableDate.yearStart.isNull()))
+                        .and(qParticipantNotableDate.yearEnd.goe(year).or(qParticipantNotableDate.yearEnd.isNull())))
+                );
+
+        List<ParticipantNotableDate> matchingDates = (List<ParticipantNotableDate>) participantNotableDateRepository.findAll(pNDForTimeRange);
+        return matchingDates.stream()
                 .map(this::convert)
                 .toList();
     }

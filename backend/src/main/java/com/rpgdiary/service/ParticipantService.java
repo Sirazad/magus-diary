@@ -21,6 +21,8 @@ public interface ParticipantService {
 
     List<ParticipantNotableDateDTO> getParticipantNotableDates(Long participantId, String calendarTypeCode);
 
+    List<ParticipantNotableDateDTO> getDateForTimeRangeAndParticipant(Long participantId, String calendarTypeCode, int year, int startDate, int endDate);
+
     ParticipantNotableDateDTO addNotableDate(ParticipantNotableDateDTO dto);
 
     void deleteNotableDate(Long notableDateId);

@@ -3,6 +3,7 @@ package com.rpgdiary.controller;
 import com.rpgdiary.dto.ParticipantNotableDateDTO;
 import com.rpgdiary.service.ParticipantService;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -18,7 +19,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/participant-notable-dates")
-//@CrossOrigin(origins = "http://localhost:5173")
 @AllArgsConstructor
 public class ParticipantNotableDateController {
 
@@ -43,5 +43,18 @@ public class ParticipantNotableDateController {
     public ResponseEntity<Void> deleteNotableDate(@PathVariable Long id) {
         participantService.deleteNotableDate(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/participant/{participantId}/calendar/{calendarTypeCode}/year/{year}/range/{startDate}/{endDate}")
+    public ResponseEntity<List<ParticipantNotableDateDTO>> getDateForTimeRangeAndParticipant(
+            @PathVariable Long participantId,
+            @PathVariable String calendarTypeCode,
+            @PathVariable int year,
+            @PathVariable int startDate,
+            @PathVariable int endDate
+            ) {
+        List<ParticipantNotableDateDTO> dateForTimeRangeAndParticipant = participantService.getDateForTimeRangeAndParticipant(
+                participantId, calendarTypeCode, year, startDate, endDate);
+        return ResponseEntity.ok(dateForTimeRangeAndParticipant);
     }
 }
