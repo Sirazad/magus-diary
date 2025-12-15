@@ -12,6 +12,7 @@ interface EventListProps {
   day: number;
   onEdit: (eventId: number, eventType: 'holiday' | 'participant' | 'party') => void;
   onEventChange?: () => void;
+  events?: CalendarEvent[];
 }
 
 export const EventList: React.FC<EventListProps> = ({
@@ -20,23 +21,9 @@ export const EventList: React.FC<EventListProps> = ({
   day,
   onEdit,
   onEventChange,
+  events = [],
 }) => {
   const queryClient = useQueryClient();
-
-  const { data: calendarDate, isLoading } = useQuery({
-    queryKey: ['events', calendarTypeCode, year, day],
-    queryFn: async () => {
-      const response = await apiClient.get<CalendarDateDTO>(
-        `/calendar/${calendarTypeCode}/${year}/${day}`
-      );
-      return response.data;
-    },
-  });
-
-  // Combine all events from the three arrays
-  const events: CalendarEvent[] = calendarDate 
-    ? [...calendarDate.holidays, ...calendarDate.participantNotableDates, ...calendarDate.partyNotableDates]
-    : [];
 
   const deleteMutation = useMutation({
     mutationFn: async ({ eventId, eventType }: { eventId: number; eventType: string }) => {
@@ -54,7 +41,6 @@ export const EventList: React.FC<EventListProps> = ({
     },
   });
 
-  if (isLoading) return <LoadingSpinner size="small" message="Események betöltése..." />;
   if (!events || events.length === 0) {
     return (
       <ErrorAlert 

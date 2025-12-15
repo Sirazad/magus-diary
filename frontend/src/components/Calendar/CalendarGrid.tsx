@@ -9,9 +9,10 @@ import './CalendarGrid.css';
 
 interface CalendarGridProps {
   calendarTypeCode: string;
+  activeParticipantId: number | null;
 }
 
-export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) => {
+export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode, activeParticipantId }) => {
   const [year, setYear] = useState(3698);
   const [currentDay, setCurrentDay] = useState(161); // Default to day 161 (month 9, day 1)
   const [currentMonthNumber, setCurrentMonthNumber] = useState(9); // Month 9 contains day 161
@@ -31,85 +32,127 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
   
   const queryClient = useQueryClient();
 
-  // Fetch only the current month configuration
-  const { data: currentMonthConfig } = useQuery({
-    queryKey: ['calendar-month-config', calendarTypeCode, currentMonthNumber],
+  // Fetch all month configurations once for the calendar type (they never change)
+  const { data: allMonthConfigs } = useQuery({
+    queryKey: ['calendar-all-month-configs', calendarTypeCode],
     queryFn: async () => {
-      const response = await apiClient.get<MonthConfigDTO>(
-        `/calendar/config/${calendarTypeCode}/${currentMonthNumber}`
+      const response = await apiClient.get<MonthConfigDTO[]>(
+        `/calendar/config/${calendarTypeCode}`
       );
       return response.data;
     },
+    staleTime: Infinity, // Never refetch - month configs are static
+    gcTime: Infinity, // Keep in cache forever
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
 
-  // Fetch total months for navigation (lazy loaded)
-  const { data: totalMonths } = useQuery({
-    queryKey: ['calendar-total-months', calendarTypeCode],
-    queryFn: async () => {
-      const response = await apiClient.get<number>(
-        `/calendar/types/${calendarTypeCode}/months`
-      );
-      return response.data;
-    },
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  });
+  // Get current month config from the cached list
+  const currentMonthConfig = allMonthConfigs?.find(m => m.monthNumber === currentMonthNumber);
+  const totalMonths = allMonthConfigs?.length;
 
   // Fetch all events for the current month
   const { data: monthEvents } = useQuery({
-    queryKey: ['calendar-month-events', calendarTypeCode, year, currentMonthConfig?.monthNumber],
+    queryKey: ['calendar-month-events', calendarTypeCode, year, currentMonthConfig?.monthNumber, activeParticipantId],
     queryFn: async () => {
       if (!currentMonthConfig) return [];
       
-      // Fetch calendar dates for all days in the month range in parallel
       const allEvents: CalendarEvent[] = [];
       const seenEventIds = new Set<string>();
       
-      // Create all requests at once
-      const dayRequests = [];
-      for (let day = currentMonthConfig.dayStart; day <= currentMonthConfig.dayEnd; day++) {
-        dayRequests.push(
-          apiClient.get<CalendarDateDTO>(
-            `/calendar/${calendarTypeCode}/${year}/${day}`
-          ).catch(() => null) // Handle errors gracefully
+      // Determine the calendar participant ID (1 for pyarr, 2 for kyr)
+      const calendarParticipantId = calendarTypeCode === 'pyarr' ? 1 : 2;
+      
+      try {
+        // Fetch holidays using the range endpoint
+        // Holidays are stored as participant notable dates for the calendar participant
+        const holidaysResponse = await apiClient.get(
+          `/participant-notable-dates/participant/${calendarParticipantId}/calendar/${calendarTypeCode}/year/${year}/range/${currentMonthConfig.dayStart}/${currentMonthConfig.dayEnd}`
         );
+        
+        console.log('Raw holidays response:', holidaysResponse.data);
+        
+        // Transform backend response to CalendarEvent format
+        const rawHolidays = holidaysResponse.data as any[];
+        rawHolidays.forEach(rawEvent => {
+          const event: CalendarEvent = {
+            id: String(rawEvent.id),
+            eventName: rawEvent.eventName,
+            description: rawEvent.description || null,
+            type: 'holiday' as const,
+            relatedEntity: null,
+            dayStart: rawEvent.day,
+            dayEnd: rawEvent.dayEnd,
+            isRecurring: rawEvent.recurring,
+            yearStart: rawEvent.yearStart,
+            yearEnd: rawEvent.yearEnd,
+          };
+          
+          if (!seenEventIds.has(event.id)) {
+            seenEventIds.add(event.id);
+            allEvents.push(event);
+          }
+        });
+        
+        console.log('Fetched holidays for month:', rawHolidays.length, 'holidays');
+      } catch (error) {
+        console.error('Error fetching holidays:', error);
       }
       
-      // Execute all requests in parallel
-      const responses = await Promise.all(dayRequests);
-      
-      // Collect events from all responses, preserving their correct type
-      responses.forEach(response => {
-        if (response?.data) {
-          const dateData = response.data;
+      // Fetch participant events if an active participant is selected
+      if (activeParticipantId) {
+        try {
+          const participantEventsResponse = await apiClient.get(
+            `/participant-notable-dates/participant/${activeParticipantId}/calendar/${calendarTypeCode}/year/${year}/range/${currentMonthConfig.dayStart}/${currentMonthConfig.dayEnd}`
+          );
           
-          // Add events from each array with the correct type
-          dateData.holidays.forEach(event => {
+          console.log('Raw participant events response:', participantEventsResponse.data);
+          
+          const rawEvents = participantEventsResponse.data as any[];
+          rawEvents.forEach((rawEvent, index) => {
+            console.log(`Processing participant event ${index}:`, rawEvent);
+            
+            // Transform backend response to CalendarEvent format
+            const event: CalendarEvent = {
+              id: String(rawEvent.id),
+              eventName: rawEvent.eventName,
+              description: rawEvent.description || null,
+              type: 'participant' as const,
+              relatedEntity: null, // Will be populated from participant name lookup if needed
+              dayStart: rawEvent.day,
+              dayEnd: rawEvent.dayEnd,
+              isRecurring: rawEvent.recurring,
+              yearStart: rawEvent.yearStart,
+              yearEnd: rawEvent.yearEnd,
+            };
+            
+            console.log('Transformed event:', event);
+            
             if (!seenEventIds.has(event.id)) {
               seenEventIds.add(event.id);
-              allEvents.push({ ...event, type: 'holiday' as const });
+              allEvents.push(event);
+              console.log('Added to allEvents');
+            } else {
+              console.log('Skipping duplicate event:', event.id);
             }
           });
           
-          dateData.participantNotableDates.forEach(event => {
-            if (!seenEventIds.has(event.id)) {
-              seenEventIds.add(event.id);
-              allEvents.push({ ...event, type: 'participant' as const });
-            }
-          });
-          
-          dateData.partyNotableDates.forEach(event => {
-            if (!seenEventIds.has(event.id)) {
-              seenEventIds.add(event.id);
-              allEvents.push({ ...event, type: 'party' as const });
-            }
-          });
+          console.log('Fetched participant events for month:', rawEvents.length, 'events');
+        } catch (error) {
+          console.error('Error fetching participant events:', error);
         }
-      });
+      }
+      
+      // TODO: Add similar range endpoint for party events
+      // Endpoint format: /party-notable-dates/party/{partyId}/calendar/{calendarTypeCode}/year/{year}/range/{startDate}/{endDate}
       
       console.log('Fetched events for month:', allEvents.length, 'events');
+      console.log('All events breakdown:', {
+        holidays: allEvents.filter(e => e.type === 'holiday').length,
+        participant: allEvents.filter(e => e.type === 'participant').length,
+        party: allEvents.filter(e => e.type === 'party').length
+      });
+      console.log('All events:', allEvents);
       return allEvents;
     },
     enabled: !!currentMonthConfig,
@@ -126,7 +169,11 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
   // Helper function to check if an event is active on a specific day and year
   const isEventActiveOnDay = (event: CalendarEvent, day: number, currentYear: number): boolean => {
     // Check if day is in range
-    const dayInRange = day >= event.dayStart && (event.dayEnd === null || day <= event.dayEnd);
+    // If dayEnd is null, it's a single-day event (only on dayStart)
+    const dayInRange = event.dayEnd === null 
+      ? day === event.dayStart 
+      : day >= event.dayStart && day <= event.dayEnd;
+      
     if (!dayInRange) {
       return false;
     }
@@ -155,7 +202,9 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
     const partyEvents: CalendarEvent[] = [];
 
     monthEvents.forEach(event => {
-      if (!isEventActiveOnDay(event, day, year)) return;
+      const isActive = isEventActiveOnDay(event, day, year);
+      
+      if (!isActive) return;
       
       // Apply filters
       if (event.type === 'holiday' && showHolidays) {
@@ -164,6 +213,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
         // Filter by selected participants (if any selected, only show those)
         if (selectedParticipants.size === 0 || (event.relatedEntity && selectedParticipants.has(event.relatedEntity))) {
           participantEvents.push(event);
+          console.log(`Added participant event for day ${day}:`, event);
         }
       } else if (event.type === 'party' && showPartyEvents) {
         // Filter by selected parties (if any selected, only show those)
@@ -172,6 +222,10 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
         }
       }
     });
+
+    if (participantEvents.length > 0) {
+      console.log(`Day ${day} has ${participantEvents.length} participant events`);
+    }
 
     return { holidays, participantEvents, partyEvents };
   };
@@ -614,6 +668,10 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode }) 
             // Refresh events when an event is created/modified/deleted
             queryClient.refetchQueries({ queryKey: ['calendar-month-events'] });
           }}
+          events={monthEvents?.filter(e => {
+            const dayEvents = getEventsForDay(selectedDay);
+            return [...dayEvents.holidays, ...dayEvents.participantEvents, ...dayEvents.partyEvents].some(de => de.id === e.id);
+          }) || []}
         />
       </div>
     )}
