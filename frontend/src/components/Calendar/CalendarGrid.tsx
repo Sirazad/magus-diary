@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/api';
 import type { CalendarDateDTO, MonthConfigDTO, CalendarEvent } from '../../types/Calendar';
+import type { PartyDTO } from '../../types/Party';
 import { EventManager } from '../Events/EventManager';
 import { LoadingSpinner } from '../Common/LoadingSpinner';
 import { ErrorAlert } from '../Common/ErrorAlert';
@@ -10,9 +11,10 @@ import './CalendarGrid.css';
 interface CalendarGridProps {
   calendarTypeCode: string;
   activeParticipantId: number | null;
+  parties: PartyDTO[];
 }
 
-export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode, activeParticipantId }) => {
+export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode, activeParticipantId, parties }) => {
   const [year, setYear] = useState(3698);
   const [currentDay, setCurrentDay] = useState(161); // Default to day 161 (month 9, day 1)
   const [currentMonthNumber, setCurrentMonthNumber] = useState(9); // Month 9 contains day 161
@@ -52,10 +54,12 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode, ac
   const totalMonths = allMonthConfigs?.length;
 
   // Fetch all events for the current month
-  const { data: monthEvents } = useQuery({
+  const { data: monthEvents, isLoading: isLoadingEvents, error: eventsError } = useQuery({
     queryKey: ['calendar-month-events', calendarTypeCode, year, currentMonthConfig?.monthNumber, activeParticipantId],
     queryFn: async () => {
-      if (!currentMonthConfig) return [];
+      if (!currentMonthConfig) {
+        return [];
+      }
       
       const allEvents: CalendarEvent[] = [];
       const seenEventIds = new Set<string>();
@@ -70,13 +74,11 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode, ac
           `/participant-notable-dates/participant/${calendarParticipantId}/calendar/${calendarTypeCode}/year/${year}/range/${currentMonthConfig.dayStart}/${currentMonthConfig.dayEnd}`
         );
         
-        console.log('Raw holidays response:', holidaysResponse.data);
-        
         // Transform backend response to CalendarEvent format
         const rawHolidays = holidaysResponse.data as any[];
         rawHolidays.forEach(rawEvent => {
           const event: CalendarEvent = {
-            id: String(rawEvent.id),
+            id: `holiday-${rawEvent.id}`,
             eventName: rawEvent.eventName,
             description: rawEvent.description || null,
             type: 'holiday' as const,
@@ -93,8 +95,6 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode, ac
             allEvents.push(event);
           }
         });
-        
-        console.log('Fetched holidays for month:', rawHolidays.length, 'holidays');
       } catch (error) {
         console.error('Error fetching holidays:', error);
       }
@@ -106,19 +106,15 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode, ac
             `/participant-notable-dates/participant/${activeParticipantId}/calendar/${calendarTypeCode}/year/${year}/range/${currentMonthConfig.dayStart}/${currentMonthConfig.dayEnd}`
           );
           
-          console.log('Raw participant events response:', participantEventsResponse.data);
-          
           const rawEvents = participantEventsResponse.data as any[];
-          rawEvents.forEach((rawEvent, index) => {
-            console.log(`Processing participant event ${index}:`, rawEvent);
-            
+          rawEvents.forEach((rawEvent) => {
             // Transform backend response to CalendarEvent format
             const event: CalendarEvent = {
-              id: String(rawEvent.id),
+              id: `participant-${rawEvent.id}`,
               eventName: rawEvent.eventName,
               description: rawEvent.description || null,
               type: 'participant' as const,
-              relatedEntity: null, // Will be populated from participant name lookup if needed
+              relatedEntity: null,
               dayStart: rawEvent.day,
               dayEnd: rawEvent.dayEnd,
               isRecurring: rawEvent.recurring,
@@ -126,33 +122,54 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode, ac
               yearEnd: rawEvent.yearEnd,
             };
             
-            console.log('Transformed event:', event);
-            
             if (!seenEventIds.has(event.id)) {
               seenEventIds.add(event.id);
               allEvents.push(event);
-              console.log('Added to allEvents');
-            } else {
-              console.log('Skipping duplicate event:', event.id);
             }
           });
-          
-          console.log('Fetched participant events for month:', rawEvents.length, 'events');
         } catch (error) {
           console.error('Error fetching participant events:', error);
         }
+
+        // Fetch party events for parties the participant belongs to
+        // Filter parties where the active participant is a member (updated)
+        const participantParties = parties.filter(party => 
+          Array.from(party.memberIds).includes(activeParticipantId)
+        );
+        
+        // Fetch events for each party
+        for (const party of participantParties) {
+          try {
+            const partyEventsResponse = await apiClient.get(
+              `/party-notable-dates/party/${party.id}/calendar/${calendarTypeCode}/year/${year}/range/${currentMonthConfig.dayStart}/${currentMonthConfig.dayEnd}`
+            );
+            
+            const rawPartyEvents = partyEventsResponse.data as any[];
+            rawPartyEvents.forEach(rawEvent => {
+              const event: CalendarEvent = {
+                id: `party-${rawEvent.id}`,
+                eventName: rawEvent.eventName,
+                description: rawEvent.description || null,
+                type: 'party' as const,
+                relatedEntity: party.name || null,
+                dayStart: rawEvent.day,
+                dayEnd: rawEvent.dayEnd,
+                isRecurring: rawEvent.recurring,
+                yearStart: rawEvent.yearStart,
+                yearEnd: rawEvent.yearEnd,
+              };
+              
+              if (!seenEventIds.has(event.id)) {
+                seenEventIds.add(event.id);
+                allEvents.push(event);
+              }
+            });
+          } catch (error) {
+            // Continue with other parties even if one fails
+          }
+        }
       }
       
-      // TODO: Add similar range endpoint for party events
-      // Endpoint format: /party-notable-dates/party/{partyId}/calendar/{calendarTypeCode}/year/{year}/range/{startDate}/{endDate}
-      
-      console.log('Fetched events for month:', allEvents.length, 'events');
-      console.log('All events breakdown:', {
-        holidays: allEvents.filter(e => e.type === 'holiday').length,
-        participant: allEvents.filter(e => e.type === 'participant').length,
-        party: allEvents.filter(e => e.type === 'party').length
-      });
-      console.log('All events:', allEvents);
       return allEvents;
     },
     enabled: !!currentMonthConfig,
@@ -206,26 +223,23 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode, ac
       
       if (!isActive) return;
       
-      // Apply filters
+      // Apply filters - each event can only be one type
       if (event.type === 'holiday' && showHolidays) {
         holidays.push(event);
       } else if (event.type === 'participant' && showParticipantEvents) {
         // Filter by selected participants (if any selected, only show those)
-        if (selectedParticipants.size === 0 || (event.relatedEntity && selectedParticipants.has(event.relatedEntity))) {
+        const passesFilter = selectedParticipants.size === 0 || (event.relatedEntity && selectedParticipants.has(event.relatedEntity));
+        if (passesFilter) {
           participantEvents.push(event);
-          console.log(`Added participant event for day ${day}:`, event);
         }
       } else if (event.type === 'party' && showPartyEvents) {
         // Filter by selected parties (if any selected, only show those)
-        if (selectedParties.size === 0 || (event.relatedEntity && selectedParties.has(event.relatedEntity))) {
+        const passesFilter = selectedParties.size === 0 || (event.relatedEntity && selectedParties.has(event.relatedEntity));
+        if (passesFilter) {
           partyEvents.push(event);
         }
       }
     });
-
-    if (participantEvents.length > 0) {
-      console.log(`Day ${day} has ${participantEvents.length} participant events`);
-    }
 
     return { holidays, participantEvents, partyEvents };
   };
@@ -660,13 +674,17 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode, ac
           calendarTypeCode={calendarTypeCode}
           year={year}
           day={selectedDay}
+          monthNumber={currentMonthNumber}
+          activeParticipantId={activeParticipantId}
           onClose={() => {
             setShowEventPanel(false);
             setSelectedDay(null);
           }}
           onEventChange={() => {
-            // Refresh events when an event is created/modified/deleted
-            queryClient.refetchQueries({ queryKey: ['calendar-month-events'] });
+            // Refresh specific month's events when an event is created/modified/deleted
+            queryClient.invalidateQueries({ 
+              queryKey: ['calendar-month-events', calendarTypeCode, year, currentMonthNumber, activeParticipantId] 
+            });
           }}
           events={monthEvents?.filter(e => {
             const dayEvents = getEventsForDay(selectedDay);
