@@ -31,7 +31,7 @@ import static jakarta.persistence.GenerationType.IDENTITY;
 @Entity
 @Table(name = "parties")
 @Data
-@EqualsAndHashCode(exclude = {"members", "notableDates"})
+//@EqualsAndHashCode(exclude = {"members", "notableDates"})
 public class Party {
 
     @Id
@@ -56,6 +56,7 @@ public class Party {
             joinColumns = @JoinColumn(name = "party_id"),
             inverseJoinColumns = @JoinColumn(name = "participant_id")
     )
+    @EqualsAndHashCode.Exclude
     private Set<Participant> members = new HashSet<>();
 
     @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = true)

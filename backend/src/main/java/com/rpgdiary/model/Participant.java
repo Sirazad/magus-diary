@@ -27,7 +27,7 @@ import static jakarta.persistence.GenerationType.IDENTITY;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(exclude = "notableDates")
+//@EqualsAndHashCode(exclude = "notableDates")
 public class Participant {
 
     @Id
@@ -50,6 +50,7 @@ public class Participant {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "participant", cascade = CascadeType.ALL, orphanRemoval = true)
+    @EqualsAndHashCode.Exclude
     private Set<ParticipantNotableDate> notableDates;
 
     public static ParticipantBuilder builder() {
