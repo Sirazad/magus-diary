@@ -13,14 +13,17 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import static jakarta.persistence.GenerationType.IDENTITY;
@@ -28,8 +31,7 @@ import static jakarta.persistence.GenerationType.IDENTITY;
 @Entity
 @Table(name = "parties")
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
+@EqualsAndHashCode(exclude = {"members", "notableDates"})
 public class Party {
 
     @Id
@@ -58,6 +60,9 @@ public class Party {
 
     @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<PartyNotableDate> notableDates = new HashSet<>();
+
+
+
 
     public static PartyBuilder builder() {
         return new PartyBuilder();
