@@ -62,8 +62,6 @@ public class Party {
     private Set<PartyNotableDate> notableDates = new HashSet<>();
 
 
-
-
     public static PartyBuilder builder() {
         return new PartyBuilder();
     }
@@ -106,5 +104,4 @@ public class Party {
             return party;
         }
     }
-
 }

@@ -57,15 +57,15 @@ public class PartyNotableDateController {
     }
 
     @GetMapping("/party/{partyId}/calendar/{calendarTypeCode}/year/{year}/range/{startDate}/{endDate}")
-    public ResponseEntity<List<PartyNotableDateDTO>> getDateForTimeRangeAndParticipant(
+    public ResponseEntity<List<PartyNotableDateDTO>> getDateForTimeRangeAndParty(
             @PathVariable Long partyId,
             @PathVariable String calendarTypeCode,
             @PathVariable int year,
             @PathVariable int startDate,
             @PathVariable int endDate
     ) {
-        List<PartyNotableDateDTO> dateForTimeRangeAndParticipant = partyService.getDateForTimeRangeAndParticipant(
+        List<PartyNotableDateDTO> dateForTimeRangeAndParty = partyService.getDateForTimeRangeAndParty(
                 partyId, calendarTypeCode, year, startDate, endDate);
-        return ResponseEntity.ok(dateForTimeRangeAndParticipant);
+        return ResponseEntity.ok(dateForTimeRangeAndParty);
     }
 }

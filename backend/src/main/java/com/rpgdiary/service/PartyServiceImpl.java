@@ -229,7 +229,7 @@ public class PartyServiceImpl implements PartyService {
     }
 
     @Override
-    public List<PartyNotableDateDTO> getDateForTimeRangeAndParticipant(Long partyId, String calendarTypeCode, int year, int startDate, int endDate) {
+    public List<PartyNotableDateDTO> getDateForTimeRangeAndParty(Long partyId, String calendarTypeCode, int year, int startDate, int endDate) {
         var party = partyRepository.findById(partyId)
                 .orElseThrow(() -> new PartyNotFoundException("id: " + partyId));
 

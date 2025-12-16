@@ -32,5 +32,5 @@ public interface PartyService {
 
     @Nullable PartyNotableDateDTO updateNotableDate(Long id, PartyNotableDateDTO request);
 
-    List<PartyNotableDateDTO> getDateForTimeRangeAndParticipant(Long partyId, String calendarTypeCode, int year, int startDate, int endDate);
+    List<PartyNotableDateDTO> getDateForTimeRangeAndParty(Long partyId, String calendarTypeCode, int year, int startDate, int endDate);
 }
