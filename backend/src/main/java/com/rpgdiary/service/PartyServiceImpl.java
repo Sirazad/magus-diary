@@ -247,7 +247,7 @@ public class PartyServiceImpl implements PartyService {
                                 .and(qPartyNotableDate.yearEnd.goe(year).or(qPartyNotableDate.yearEnd.isNull())))
                 );
 
-        List<PartyNotableDate> matchingDates = (List<PartyNotableDate>) partyNotableDateRepository.findAll(pNDForTimeRange);
+        var matchingDates = (List<PartyNotableDate>) partyNotableDateRepository.findAll(pNDForTimeRange);
         return matchingDates.stream()
                 .map(this::convert)
                 .toList();
