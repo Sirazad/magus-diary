@@ -5,7 +5,6 @@ import com.rpgdiary.service.PartyService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,7 +18,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/party-notable-dates")
-//@CrossOrigin(origins = "http://localhost:5173")
 @AllArgsConstructor
 public class PartyNotableDateController {
 
@@ -56,5 +54,18 @@ public class PartyNotableDateController {
     public ResponseEntity<Void> deleteNotableDate(@PathVariable Long id) {
         partyService.deleteNotableDate(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/party/{partyId}/calendar/{calendarTypeCode}/year/{year}/range/{startDate}/{endDate}")
+    public ResponseEntity<List<PartyNotableDateDTO>> getDateForTimeRangeAndParty(
+            @PathVariable Long partyId,
+            @PathVariable String calendarTypeCode,
+            @PathVariable int year,
+            @PathVariable int startDate,
+            @PathVariable int endDate
+    ) {
+        List<PartyNotableDateDTO> dateForTimeRangeAndParty = partyService.getDateForTimeRangeAndParty(
+                partyId, calendarTypeCode, year, startDate, endDate);
+        return ResponseEntity.ok(dateForTimeRangeAndParty);
     }
 }

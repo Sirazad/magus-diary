@@ -1,5 +1,6 @@
 package com.rpgdiary.service;
 
+import com.querydsl.core.types.Predicate;
 import com.rpgdiary.dto.PartyDTO;
 import com.rpgdiary.dto.PartyNotableDateDTO;
 import com.rpgdiary.exception.CalendarNotFoundException;
@@ -9,6 +10,7 @@ import com.rpgdiary.model.Party;
 import com.rpgdiary.model.Participant;
 import com.rpgdiary.model.PartyNotableDate;
 import com.rpgdiary.model.CalendarType;
+import com.rpgdiary.model.QPartyNotableDate;
 import com.rpgdiary.repository.PartyRepository;
 import com.rpgdiary.repository.ParticipantRepository;
 import com.rpgdiary.repository.PartyNotableDateRepository;
@@ -224,6 +226,31 @@ public class PartyServiceImpl implements PartyService {
                 .orElseThrow(() -> new java.util.NoSuchElementException(
                         "Notable date not found with id: " + id
                 ));
+    }
+
+    @Override
+    public List<PartyNotableDateDTO> getDateForTimeRangeAndParty(Long partyId, String calendarTypeCode, int year, int startDate, int endDate) {
+        var party = partyRepository.findById(partyId)
+                .orElseThrow(() -> new PartyNotFoundException("id: " + partyId));
+
+        var calendarType = calendarTypeRepository.findById(calendarTypeCode)
+                .orElseThrow(() -> new CalendarNotFoundException(calendarTypeCode));
+
+        var qPartyNotableDate = QPartyNotableDate.partyNotableDate;
+
+        Predicate pNDForTimeRange = qPartyNotableDate.calendarType.eq(calendarType)
+                .and(qPartyNotableDate.party.id.eq(party.getId()))
+                .and(qPartyNotableDate.day.between(startDate, endDate))
+                .and(qPartyNotableDate.year.eq(year)
+                        .or(qPartyNotableDate.isRecurring.isTrue()
+                                .and(qPartyNotableDate.yearStart.loe(year).or(qPartyNotableDate.yearStart.isNull()))
+                                .and(qPartyNotableDate.yearEnd.goe(year).or(qPartyNotableDate.yearEnd.isNull())))
+                );
+
+        var matchingDates = (List<PartyNotableDate>) partyNotableDateRepository.findAll(pNDForTimeRange);
+        return matchingDates.stream()
+                .map(this::convert)
+                .toList();
     }
 
     private PartyDTO convert(Party party) {

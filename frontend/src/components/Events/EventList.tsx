@@ -10,6 +10,8 @@ interface EventListProps {
   calendarTypeCode: string;
   year: number;
   day: number;
+  monthNumber: number;
+  activeParticipantId: number | null;
   onEdit: (eventId: number, eventType: 'holiday' | 'participant' | 'party') => void;
   onEventChange?: () => void;
   events?: CalendarEvent[];
@@ -19,6 +21,8 @@ export const EventList: React.FC<EventListProps> = ({
   calendarTypeCode,
   year,
   day,
+  monthNumber,
+  activeParticipantId,
   onEdit,
   onEventChange,
   events = [],
@@ -36,10 +40,16 @@ export const EventList: React.FC<EventListProps> = ({
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['events'] });
-      onEventChange?.(); // Notify parent that events changed
+      // Let the parent handle invalidation via onEventChange callback
+      onEventChange?.();
     },
   });
+
+  // Helper to extract numeric ID from prefixed ID (e.g., "party-3" -> 3)
+  const getNumericId = (prefixedId: string): number => {
+    const parts = prefixedId.split('-');
+    return parseInt(parts[parts.length - 1]);
+  };
 
   if (!events || events.length === 0) {
     return (
@@ -64,7 +74,7 @@ export const EventList: React.FC<EventListProps> = ({
               </div>
               <div className="event-actions">
                 <button
-                  onClick={() => onEdit(parseInt(event.id), event.type as any)}
+                  onClick={() => onEdit(getNumericId(event.id), event.type as any)}
                   className="btn-icon btn-edit"
                   title="Edit event"
                 >
@@ -72,7 +82,7 @@ export const EventList: React.FC<EventListProps> = ({
                 </button>
                 <button
                   onClick={() =>
-                    deleteMutation.mutate({ eventId: parseInt(event.id), eventType: event.type })
+                    deleteMutation.mutate({ eventId: getNumericId(event.id), eventType: event.type })
                   }
                   disabled={deleteMutation.isPending}
                   className="btn-icon btn-delete"

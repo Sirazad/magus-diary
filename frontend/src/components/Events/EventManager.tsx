@@ -8,6 +8,8 @@ interface EventManagerProps {
   calendarTypeCode: string;
   year: number;
   day: number;
+  monthNumber: number;
+  activeParticipantId: number | null;
   onClose: () => void;
   onEventChange?: () => void;
   events?: CalendarEvent[];
@@ -17,6 +19,8 @@ export const EventManager: React.FC<EventManagerProps> = ({
   calendarTypeCode,
   year,
   day,
+  monthNumber,
+  activeParticipantId,
   onClose,
   onEventChange,
   events = [],
@@ -92,6 +96,8 @@ export const EventManager: React.FC<EventManagerProps> = ({
               calendarTypeCode={calendarTypeCode}
               year={year}
               day={day}
+              monthNumber={monthNumber}
+              activeParticipantId={activeParticipantId}
               onEdit={handleEdit}
               onEventChange={onEventChange}
               events={events}

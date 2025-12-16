@@ -6,6 +6,7 @@ import { PartyList } from './components/Party/PartyList';
 import { ParticipantList } from './components/Participant/ParticipantList';
 import apiClient from './services/api';
 import type { ParticipantDTO } from './types/Participant';
+import type { PartyDTO } from './types/Party';
 import './App.css';
 
 const queryClient = new QueryClient({
@@ -33,6 +34,15 @@ function AppContent() {
       const response = await apiClient.get<ParticipantDTO[]>('/participants');
       // Filter for type 'JK'
       return response.data.filter(p => p.type === 'JK');
+    },
+  });
+
+  // Fetch all parties
+  const { data: parties } = useQuery({
+    queryKey: ['parties'],
+    queryFn: async () => {
+      const response = await apiClient.get<PartyDTO[]>('/parties');
+      return response.data;
     },
   });
 
@@ -89,6 +99,7 @@ function AppContent() {
               <CalendarGrid 
                 calendarTypeCode={selectedCalendar} 
                 activeParticipantId={activeParticipantId}
+                parties={parties || []}
               />
             </>
           )}

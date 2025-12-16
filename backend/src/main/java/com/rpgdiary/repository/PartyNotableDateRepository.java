@@ -6,13 +6,14 @@ import com.rpgdiary.model.Party;
 import com.rpgdiary.model.PartyNotableDate;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public interface PartyNotableDateRepository extends JpaRepository<PartyNotableDate, Long> {
+public interface PartyNotableDateRepository extends JpaRepository<PartyNotableDate, Long>, QuerydslPredicateExecutor<PartyNotableDate> {
 
     List<PartyNotableDate> findByPartyAndCalendarTypeAndYear(
             Party party, CalendarType calendarType, Integer year);
