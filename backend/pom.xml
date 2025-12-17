@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0          http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.0.0</version>
+        <relativePath/>
+    </parent>
 
     <groupId>com.rpgdiary</groupId>
     <artifactId>rpg-diary-backend</artifactId>
@@ -13,20 +17,12 @@
     <name>RPG Diary Backend</name>
     <description>Backend for RPG Diary Application</description>
 
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.0</version>
-        <relativePath/>
-    </parent>
-
     <properties>
         <java.version>25</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencies>
-        <!-- Spring Boot Starters -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -42,7 +38,6 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!-- Database -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
@@ -50,14 +45,12 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
 
-        <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -67,6 +60,80 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <java>
+                        <palantirJavaFormat>
+                            <version>2.74.0</version>
+                        </palantirJavaFormat>
+                        <importOrder>
+                            <order>\#,java,javax,jakarta,org,com,,</order>
+                        </importOrder>
+                        <indent>
+                            <spaces>true</spaces>
+                            <spacesPerTab>4</spacesPerTab>
+                        </indent>
+                        <formatAnnotations/>
+                        <removeUnusedImports/>
+                        <cleanthat>
+                            <version>2.24</version>
+                            <sourceJdk>${java.version}</sourceJdk>
+                            <includeDraft>true</includeDraft>
+                            <mutators>
+                                <mutator>ImportQualifiedTokens</mutator>
+                                <mutator>OptionalMapIdentity</mutator>
+                                <mutator>PMDMutators</mutator>
+                                <mutator>SafeAndConsensual</mutator>
+                                <mutator>SafeButNotConsensual</mutator>
+                                <mutator>SimplifyBooleanInitialization</mutator>
+                                <mutator>SonarMutators</mutator>
+                                <mutator>StreamMapIdentity</mutator>
+                            </mutators>
+                            <excludedMutators>
+                                <mutator>AvoidInlineConditionals</mutator>
+                                <mutator>CastMathOperandBeforeAssignement</mutator>
+                                <mutator>LocalVariableTypeInference</mutator>
+                                <mutator>SimplifyStartsWith</mutator>
+                                <mutator>UseTextBlocks</mutator>
+                            </excludedMutators>
+                        </cleanthat>
+                    </java>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>apply</goal>
+                        </goals>
+                        <phase>process-sources</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.github.ekryd.sortpom</groupId>
+                <artifactId>sortpom-maven-plugin</artifactId>
+                <version>3.4.1</version>
+                <configuration>
+                    <createBackupFile>false</createBackupFile>
+                    <expandEmptyElements>false</expandEmptyElements>
+                    <nrOfIndentSpace>4</nrOfIndentSpace>
+                    <sortDependencyExclusions>groupId,artifactId</sortDependencyExclusions>
+                    <sortDependencyManagement>groupId,artifactId</sortDependencyManagement>
+                    <sortProperties>true</sortProperties>
+                    <verifyFail>stop</verifyFail>
+                    <verifyFailOn>strict</verifyFailOn>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>sort</goal>
+                        </goals>
+                        <phase>validate</phase>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -90,7 +157,6 @@
                 </configuration>
             </plugin>
         </plugins>
-
     </build>
 
 </project>
