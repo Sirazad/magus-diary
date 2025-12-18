@@ -13,7 +13,6 @@ public class ParticipantDTO {
     private String type;
     private String description;
 
-
     public static ParticipantDTOBuilder builder() {
         return new ParticipantDTOBuilder();
     }

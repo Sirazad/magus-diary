@@ -1,5 +1,9 @@
 package com.rpgdiary.model;
 
+import static jakarta.persistence.GenerationType.IDENTITY;
+
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -7,15 +11,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
-
-import static jakarta.persistence.GenerationType.IDENTITY;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "party_notable_date")
@@ -165,8 +167,7 @@ public class PartyNotableDate {
                     yearStart,
                     yearEnd,
                     createdAt,
-                    updatedAt
-            );
+                    updatedAt);
         }
     }
 }

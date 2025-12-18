@@ -72,7 +72,6 @@ public class ParticipantNotableDate {
         return new ParticipantNotableDate.Builder();
     }
 
-
     public static class Builder {
         private Long id;
         private Participant participant;
@@ -96,7 +95,7 @@ public class ParticipantNotableDate {
             return this;
         }
 
-        public Builder dayEnd (Integer dayEnd) {
+        public Builder dayEnd(Integer dayEnd) {
             this.dayEnd = dayEnd;
             return this;
         }
@@ -154,6 +153,7 @@ public class ParticipantNotableDate {
             date.setRecurring(this.isRecurring);
             date.setYearStart(this.yearStart);
             date.setYearEnd(this.yearEnd);
-            return date;}
+            return date;
+        }
     }
 }

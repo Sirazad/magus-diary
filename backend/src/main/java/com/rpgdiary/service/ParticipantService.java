@@ -1,9 +1,9 @@
 package com.rpgdiary.service;
 
+import java.util.List;
+
 import com.rpgdiary.dto.ParticipantDTO;
 import com.rpgdiary.dto.ParticipantNotableDateDTO;
-
-import java.util.List;
 
 public interface ParticipantService {
 
@@ -21,7 +21,8 @@ public interface ParticipantService {
 
     List<ParticipantNotableDateDTO> getParticipantNotableDates(Long participantId, String calendarTypeCode);
 
-    List<ParticipantNotableDateDTO> getDateForTimeRangeAndParticipant(Long participantId, String calendarTypeCode, int year, int startDate, int endDate);
+    List<ParticipantNotableDateDTO> getDateForTimeRangeAndParticipant(
+            Long participantId, String calendarTypeCode, int year, int startDate, int endDate);
 
     ParticipantNotableDateDTO addNotableDate(ParticipantNotableDateDTO dto);
 

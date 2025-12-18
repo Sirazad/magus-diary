@@ -1,5 +1,11 @@
 package com.rpgdiary.model;
 
+import static jakarta.persistence.GenerationType.IDENTITY;
+
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,27 +17,20 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-
-import static jakarta.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "parties")
 @Data
-//@EqualsAndHashCode(exclude = {"members", "notableDates"})
+// @EqualsAndHashCode(exclude = {"members", "notableDates"})
 public class Party {
 
     @Id
@@ -54,14 +53,12 @@ public class Party {
     @JoinTable(
             name = "party_participants",
             joinColumns = @JoinColumn(name = "party_id"),
-            inverseJoinColumns = @JoinColumn(name = "participant_id")
-    )
+            inverseJoinColumns = @JoinColumn(name = "participant_id"))
     @EqualsAndHashCode.Exclude
     private Set<Participant> members = new HashSet<>();
 
     @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<PartyNotableDate> notableDates = new HashSet<>();
-
 
     public static PartyBuilder builder() {
         return new PartyBuilder();
@@ -75,7 +72,6 @@ public class Party {
         private String description;
         private Set<Participant> members;
         private Long id;
-
 
         public PartyBuilder name(String name) {
             this.name = name;
@@ -96,6 +92,7 @@ public class Party {
             this.members = members;
             return this;
         }
+
         public Party build() {
             Party party = new Party();
             party.setName(this.name);

@@ -1,12 +1,13 @@
 package com.rpgdiary.repository;
 
-import com.rpgdiary.model.CalendarConfiguration;
-import com.rpgdiary.model.CalendarType;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.rpgdiary.model.CalendarConfiguration;
+import com.rpgdiary.model.CalendarType;
 
 @Repository
 public interface CalendarConfigurationRepository extends JpaRepository<CalendarConfiguration, Long> {

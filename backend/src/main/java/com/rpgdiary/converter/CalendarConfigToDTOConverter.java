@@ -1,9 +1,10 @@
 package com.rpgdiary.converter;
 
-import com.rpgdiary.dto.CalendarConfigurationDTO;
-import com.rpgdiary.model.CalendarConfiguration;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.converter.Converter;
+
+import com.rpgdiary.dto.CalendarConfigurationDTO;
+import com.rpgdiary.model.CalendarConfiguration;
 
 public class CalendarConfigToDTOConverter implements Converter<CalendarConfiguration, CalendarConfigurationDTO> {
 

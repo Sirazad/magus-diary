@@ -1,5 +1,10 @@
 package com.rpgdiary.service;
 
+import java.util.List;
+
+import org.springframework.core.convert.ConversionService;
+import org.springframework.stereotype.Service;
+
 import com.rpgdiary.dto.CalendarConfigurationDTO;
 import com.rpgdiary.dto.CalendarDateDTO;
 import com.rpgdiary.dto.CalendarEventDTO;
@@ -13,11 +18,8 @@ import com.rpgdiary.repository.CalendarConfigurationRepository;
 import com.rpgdiary.repository.CalendarTypeRepository;
 import com.rpgdiary.repository.ParticipantNotableDateRepository;
 import com.rpgdiary.repository.PartyNotableDateRepository;
-import lombok.AllArgsConstructor;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.stereotype.Service;
 
-import java.util.List;
+import lombok.AllArgsConstructor;
 
 @Service
 @AllArgsConstructor
@@ -31,63 +33,56 @@ public class CalendarServiceImpl implements CalendarService {
 
     @Override
     public List<CalendarTypeDTO> getAllCalendarTypes() {
-        return calendarTypeRepository.findAllByOrderByCode()
-                .stream()
+        return calendarTypeRepository.findAllByOrderByCode().stream()
                 .map(this::convert)
                 .toList();
     }
 
     @Override
     public CalendarTypeDTO getCalendarTypeByCode(String code) {
-        return convert(calendarTypeRepository.findById(code)
-                .orElseThrow(() -> new CalendarNotFoundException(code))
-        );
-
+        return convert(calendarTypeRepository.findById(code).orElseThrow(() -> new CalendarNotFoundException(code)));
     }
 
     @Override
     public List<CalendarConfigurationDTO> getCalendarConfiguration(String calendarTypeCode) {
-        CalendarType calendarType = calendarTypeRepository.findById(calendarTypeCode)
+        CalendarType calendarType = calendarTypeRepository
+                .findById(calendarTypeCode)
                 .orElseThrow(() -> new CalendarNotFoundException(calendarTypeCode));
 
-        return calendarConfigurationRepository.findByCalendarTypeOrderByMonthNumber(calendarType)
-                .stream()
+        return calendarConfigurationRepository.findByCalendarTypeOrderByMonthNumber(calendarType).stream()
                 .map(this::convert)
                 .toList();
     }
 
     @Override
     public CalendarConfigurationDTO getMonthConfiguration(String calendarTypeCode, int monthNumber) {
-        CalendarType calendarType = calendarTypeRepository.findById(calendarTypeCode)
+        CalendarType calendarType = calendarTypeRepository
+                .findById(calendarTypeCode)
                 .orElseThrow(() -> new CalendarNotFoundException(calendarTypeCode));
 
         return convert(calendarConfigurationRepository
                 .findByCalendarTypeAndMonthNumber(calendarType, monthNumber)
-                .orElseThrow(() -> new java.util.NoSuchElementException(
-                        "Month configuration not found for calendar: " + calendarTypeCode +
-                                ", month: " + monthNumber
-                )));
+                .orElseThrow(() -> new java.util.NoSuchElementException("Month configuration not found for calendar: "
+                        + calendarTypeCode + ", month: " + monthNumber)));
     }
 
     @Override
     public CalendarDateDTO getCalendarDate(String calendarTypeCode, int year, int day) {
-        CalendarType calendarType = calendarTypeRepository.findById(calendarTypeCode)
+        CalendarType calendarType = calendarTypeRepository
+                .findById(calendarTypeCode)
                 .orElseThrow(() -> new CalendarNotFoundException(calendarTypeCode));
 
         if (day < 1 || day > calendarType.getDaysPerYear()) {
             throw new IllegalArgumentException(
-                    "Day " + day + " is outside calendar range (1-" + calendarType.getDaysPerYear() + ")"
-            );
+                    "Day " + day + " is outside calendar range (1-" + calendarType.getDaysPerYear() + ")");
         }
 
-        CalendarConfiguration calendarConfiguration = calendarConfigurationRepository
-                .findByCalendarType(calendarType)
-                .stream()
-                .filter(config -> day >= config.getDayStart() && day <= config.getDayEnd())
-                .findFirst()
-                .orElseThrow(() -> new java.util.NoSuchElementException(
-                        "Month configuration not found for day: " + day
-                ));
+        CalendarConfiguration calendarConfiguration =
+                calendarConfigurationRepository.findByCalendarType(calendarType).stream()
+                        .filter(config -> day >= config.getDayStart() && day <= config.getDayEnd())
+                        .findFirst()
+                        .orElseThrow(() ->
+                                new java.util.NoSuchElementException("Month configuration not found for day: " + day));
 
         int dayOfWeek = ((day - 1) % calendarType.getDaysPerWeek()) + 1;
 
@@ -112,18 +107,18 @@ public class CalendarServiceImpl implements CalendarService {
 
     @Override
     public Integer getMonthCountForCalendarType(String calendarTypeCode) {
-        CalendarType calendarType = calendarTypeRepository.findById(calendarTypeCode)
+        CalendarType calendarType = calendarTypeRepository
+                .findById(calendarTypeCode)
                 .orElseThrow(() -> new CalendarNotFoundException(calendarTypeCode));
         return calendarConfigurationRepository.countByCalendarType(calendarType);
-
     }
 
     private List<CalendarEventDTO> getHolidaysForDate(CalendarType calendarType, int year, int day) {
-        List<ParticipantNotableDate> holidays = participantNotableDateRepository
-                .findByCalendarTypeAndYearIsNullAndIsRecurringTrue(calendarType);
+        List<ParticipantNotableDate> holidays =
+                participantNotableDateRepository.findByCalendarTypeAndYearIsNullAndIsRecurringTrue(calendarType);
 
-        List<ParticipantNotableDate> holidaysWithYear = participantNotableDateRepository
-                .findByCalendarTypeAndYearIncluded(calendarType, year);
+        List<ParticipantNotableDate> holidaysWithYear =
+                participantNotableDateRepository.findByCalendarTypeAndYearIncluded(calendarType, year);
 
         holidays.addAll(holidaysWithYear);
 
@@ -134,11 +129,10 @@ public class CalendarServiceImpl implements CalendarService {
     }
 
     private List<CalendarEventDTO> getParticipantEventsForDate(CalendarType calendarType, int year, int day) {
-        List<ParticipantNotableDate> events = participantNotableDateRepository
-                .findByCalendarTypeAndYearIsNullAndIsRecurringTrue(calendarType);
+        List<ParticipantNotableDate> events =
+                participantNotableDateRepository.findByCalendarTypeAndYearIsNullAndIsRecurringTrue(calendarType);
 
-        events.addAll(participantNotableDateRepository
-                .findByCalendarTypeAndYearIncluded(calendarType, year));
+        events.addAll(participantNotableDateRepository.findByCalendarTypeAndYearIncluded(calendarType, year));
 
         return events.stream()
                 .filter(event -> event.getYear() == null || event.getYear() == year)
@@ -148,11 +142,10 @@ public class CalendarServiceImpl implements CalendarService {
     }
 
     private List<CalendarEventDTO> getPartyEventsForDate(CalendarType calendarType, int year, int day) {
-        List<PartyNotableDate> events = partyNotableDateRepository
-                .findByCalendarTypeAndYearIsNullAndIsRecurringTrue(calendarType);
+        List<PartyNotableDate> events =
+                partyNotableDateRepository.findByCalendarTypeAndYearIsNullAndIsRecurringTrue(calendarType);
 
-        events.addAll(partyNotableDateRepository
-                .findByCalendarTypeAndYearIncluded(calendarType, year));
+        events.addAll(partyNotableDateRepository.findByCalendarTypeAndYearIncluded(calendarType, year));
 
         return events.stream()
                 .filter(event -> isDateInRange(day, event.getDay(), event.getDayEnd()))

@@ -105,8 +105,7 @@ public class PartyNotableDateDTO {
                     description,
                     isRecurring,
                     yearStart,
-                    yearEnd
-            );
+                    yearEnd);
         }
     }
 }

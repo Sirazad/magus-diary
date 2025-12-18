@@ -1,11 +1,12 @@
 package com.rpgdiary.repository;
 
-import com.rpgdiary.model.Participant;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.rpgdiary.model.Participant;
 
 @Repository
 public interface ParticipantRepository extends JpaRepository<Participant, Long> {
@@ -15,5 +16,4 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
     List<Participant> findByType(String type);
 
     List<Participant> findAllByOrderByName();
-
 }

@@ -1,13 +1,12 @@
 package com.rpgdiary.service;
 
+import java.util.List;
+
 import com.rpgdiary.dto.CalendarConfigurationDTO;
 import com.rpgdiary.dto.CalendarDateDTO;
 import com.rpgdiary.dto.CalendarTypeDTO;
 
-import java.util.List;
-
 public interface CalendarService {
-
 
     List<CalendarTypeDTO> getAllCalendarTypes();
 

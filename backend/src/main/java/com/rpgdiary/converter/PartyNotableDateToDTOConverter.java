@@ -1,9 +1,10 @@
 package com.rpgdiary.converter;
 
-import com.rpgdiary.dto.PartyNotableDateDTO;
-import com.rpgdiary.model.PartyNotableDate;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.converter.Converter;
+
+import com.rpgdiary.dto.PartyNotableDateDTO;
+import com.rpgdiary.model.PartyNotableDate;
 
 public class PartyNotableDateToDTOConverter implements Converter<PartyNotableDate, PartyNotableDateDTO> {
     @Override
@@ -19,7 +20,8 @@ public class PartyNotableDateToDTOConverter implements Converter<PartyNotableDat
                 .description(from.getDescription())
                 .isRecurring(from.isRecurring())
                 .partyId(from.getParty() != null ? from.getParty().getId() : null)
-                .calendarTypeCode(from.getCalendarType() != null ? from.getCalendarType().getCode() : null)
+                .calendarTypeCode(
+                        from.getCalendarType() != null ? from.getCalendarType().getCode() : null)
                 .build();
     }
 }

@@ -1,6 +1,5 @@
 package com.rpgdiary.dto;
 
-import com.rpgdiary.model.PartyNotableDate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -106,8 +105,7 @@ public class ParticipantNotableDateDTO {
                     description,
                     isRecurring,
                     yearStart,
-                    yearEnd
-            );
+                    yearEnd);
         }
     }
 }

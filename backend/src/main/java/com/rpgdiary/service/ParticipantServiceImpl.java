@@ -1,5 +1,10 @@
 package com.rpgdiary.service;
 
+import java.util.List;
+
+import org.springframework.core.convert.ConversionService;
+import org.springframework.stereotype.Service;
+
 import com.querydsl.core.types.Predicate;
 import com.rpgdiary.dto.ParticipantDTO;
 import com.rpgdiary.dto.ParticipantNotableDateDTO;
@@ -8,16 +13,12 @@ import com.rpgdiary.exception.ParticipantNotFoundException;
 import com.rpgdiary.model.CalendarType;
 import com.rpgdiary.model.Participant;
 import com.rpgdiary.model.ParticipantNotableDate;
-import com.rpgdiary.model.PartyNotableDate;
 import com.rpgdiary.model.QParticipantNotableDate;
 import com.rpgdiary.repository.CalendarTypeRepository;
 import com.rpgdiary.repository.ParticipantNotableDateRepository;
 import com.rpgdiary.repository.ParticipantRepository;
-import lombok.AllArgsConstructor;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.stereotype.Service;
 
-import java.util.List;
+import lombok.AllArgsConstructor;
 
 @Service
 @AllArgsConstructor
@@ -30,16 +31,15 @@ public class ParticipantServiceImpl implements ParticipantService {
 
     @Override
     public List<ParticipantDTO> getAllParticipants() {
-        return participantRepository.findAllByOrderByName()
-                .stream()
+        return participantRepository.findAllByOrderByName().stream()
                 .map(this::convert)
                 .toList();
     }
 
     @Override
     public ParticipantDTO getParticipantById(Long id) {
-        Participant participant = participantRepository.findById(id)
-                .orElseThrow(() -> new ParticipantNotFoundException("id: " +id));
+        Participant participant =
+                participantRepository.findById(id).orElseThrow(() -> new ParticipantNotFoundException("id: " + id));
         return convert(participant);
     }
 
@@ -50,14 +50,12 @@ public class ParticipantServiceImpl implements ParticipantService {
         }
 
         Participant participant = Participant.builder()
-                        .name(request.getName())
-                        .type(request.getType())
-                        .description(request.getDescription())
-                        .build();
-        if(participantRepository.findByName(participant.getName()).isPresent()) {
-            throw new IllegalStateException(
-                    "Participant with name '" + participant.getName() + "' already exists"
-            );
+                .name(request.getName())
+                .type(request.getType())
+                .description(request.getDescription())
+                .build();
+        if (participantRepository.findByName(participant.getName()).isPresent()) {
+            throw new IllegalStateException("Participant with name '" + participant.getName() + "' already exists");
         }
 
         return convert(participantRepository.save(participant));
@@ -65,8 +63,8 @@ public class ParticipantServiceImpl implements ParticipantService {
 
     @Override
     public ParticipantDTO updateParticipant(Long id, ParticipantDTO request) {
-        Participant participant = participantRepository.findById(id)
-                .orElseThrow(() -> new ParticipantNotFoundException("id: " + id));
+        Participant participant =
+                participantRepository.findById(id).orElseThrow(() -> new ParticipantNotFoundException("id: " + id));
 
         if (request.getName() != null && !request.getName().isBlank()) {
             participant.setName(request.getName());
@@ -85,64 +83,79 @@ public class ParticipantServiceImpl implements ParticipantService {
 
     @Override
     public void deleteParticipant(Long id) {
-        Participant participant = participantRepository.findById(id)
-                .orElseThrow(() -> new ParticipantNotFoundException("id: " + id));
+        Participant participant =
+                participantRepository.findById(id).orElseThrow(() -> new ParticipantNotFoundException("id: " + id));
         participantRepository.delete(participant);
     }
 
     @Override
     public List<ParticipantDTO> getParticipantsByType(String type) {
-        return participantRepository.findByType(type)
-                .stream()
+        return participantRepository.findByType(type).stream()
                 .map(this::convert)
                 .toList();
     }
 
     @Override
     public List<ParticipantNotableDateDTO> getParticipantNotableDates(Long participantId, String calendarTypeCode) {
-        Participant participant = participantRepository.findById(participantId)
+        Participant participant = participantRepository
+                .findById(participantId)
                 .orElseThrow(() -> new ParticipantNotFoundException("id: " + participantId));
 
-        CalendarType calendarType = calendarTypeRepository.findById(calendarTypeCode)
+        CalendarType calendarType = calendarTypeRepository
+                .findById(calendarTypeCode)
                 .orElseThrow(() -> new CalendarNotFoundException(calendarTypeCode));
 
-        return participantNotableDateRepository.findByParticipantAndCalendarType(participant, calendarType)
-                .stream()
+        return participantNotableDateRepository.findByParticipantAndCalendarType(participant, calendarType).stream()
                 .map(this::convert)
                 .toList();
     }
 
     @Override
-    public List<ParticipantNotableDateDTO> getDateForTimeRangeAndParticipant(Long participantId, String calendarTypeCode, int year, int startDate, int endDate) {
-        var participant = participantRepository.findById(participantId)
+    public List<ParticipantNotableDateDTO> getDateForTimeRangeAndParticipant(
+            Long participantId, String calendarTypeCode, int year, int startDate, int endDate) {
+        var participant = participantRepository
+                .findById(participantId)
                 .orElseThrow(() -> new ParticipantNotFoundException("id: " + participantId));
 
-        var calendarType = calendarTypeRepository.findById(calendarTypeCode)
+        var calendarType = calendarTypeRepository
+                .findById(calendarTypeCode)
                 .orElseThrow(() -> new CalendarNotFoundException(calendarTypeCode));
 
         var qParticipantNotableDate = QParticipantNotableDate.participantNotableDate;
 
-        Predicate pNDForTimeRange = qParticipantNotableDate.calendarType.eq(calendarType)
+        Predicate pNDForTimeRange = qParticipantNotableDate
+                .calendarType
+                .eq(calendarType)
                 .and(qParticipantNotableDate.participant.id.eq(participant.getId()))
                 .and(qParticipantNotableDate.day.between(startDate, endDate))
-                .and(qParticipantNotableDate.year.eq(year)
-                    .or(qParticipantNotableDate.isRecurring.isTrue()
-                        .and(qParticipantNotableDate.yearStart.loe(year).or(qParticipantNotableDate.yearStart.isNull()))
-                        .and(qParticipantNotableDate.yearEnd.goe(year).or(qParticipantNotableDate.yearEnd.isNull())))
-                );
+                .and(qParticipantNotableDate
+                        .year
+                        .eq(year)
+                        .or(qParticipantNotableDate
+                                .isRecurring
+                                .isTrue()
+                                .and(qParticipantNotableDate
+                                        .yearStart
+                                        .loe(year)
+                                        .or(qParticipantNotableDate.yearStart.isNull()))
+                                .and(qParticipantNotableDate
+                                        .yearEnd
+                                        .goe(year)
+                                        .or(qParticipantNotableDate.yearEnd.isNull()))));
 
-        List<ParticipantNotableDate> matchingDates = (List<ParticipantNotableDate>) participantNotableDateRepository.findAll(pNDForTimeRange);
-        return matchingDates.stream()
-                .map(this::convert)
-                .toList();
+        List<ParticipantNotableDate> matchingDates =
+                (List<ParticipantNotableDate>) participantNotableDateRepository.findAll(pNDForTimeRange);
+        return matchingDates.stream().map(this::convert).toList();
     }
 
     @Override
     public ParticipantNotableDateDTO addNotableDate(ParticipantNotableDateDTO request) {
-        Participant participant = participantRepository.findById(request.getParticipantId())
+        Participant participant = participantRepository
+                .findById(request.getParticipantId())
                 .orElseThrow(() -> new ParticipantNotFoundException("id: " + request.getParticipantId()));
 
-        CalendarType calendarType = calendarTypeRepository.findById(request.getCalendarTypeCode())
+        CalendarType calendarType = calendarTypeRepository
+                .findById(request.getCalendarTypeCode())
                 .orElseThrow(() -> new CalendarNotFoundException(request.getCalendarTypeCode()));
 
         ParticipantNotableDate date = ParticipantNotableDate.builder()
@@ -163,16 +176,17 @@ public class ParticipantServiceImpl implements ParticipantService {
 
     @Override
     public void deleteNotableDate(Long notableDateId) {
-        ParticipantNotableDate date = participantNotableDateRepository.findById(notableDateId)
-                .orElseThrow(() -> new java.util.NoSuchElementException(
-                        "Notable date not found with id: " + notableDateId
-                ));
+        ParticipantNotableDate date = participantNotableDateRepository
+                .findById(notableDateId)
+                .orElseThrow(
+                        () -> new java.util.NoSuchElementException("Notable date not found with id: " + notableDateId));
         participantNotableDateRepository.delete(date);
     }
 
     private ParticipantDTO convert(Participant source) {
         return converter.convert(source, ParticipantDTO.class);
     }
+
     private ParticipantNotableDateDTO convert(ParticipantNotableDate source) {
         return converter.convert(source, ParticipantNotableDateDTO.class);
     }

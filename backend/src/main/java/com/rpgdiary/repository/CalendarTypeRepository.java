@@ -1,10 +1,11 @@
 package com.rpgdiary.repository;
 
-import com.rpgdiary.model.CalendarType;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import com.rpgdiary.model.CalendarType;
 
 @Repository
 public interface CalendarTypeRepository extends JpaRepository<CalendarType, String> {

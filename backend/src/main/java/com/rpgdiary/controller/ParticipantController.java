@@ -1,12 +1,9 @@
 package com.rpgdiary.controller;
 
+import java.util.List;
 
-import com.rpgdiary.dto.ParticipantDTO;
-import com.rpgdiary.service.ParticipantService;
-import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,11 +13,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.rpgdiary.dto.ParticipantDTO;
+import com.rpgdiary.service.ParticipantService;
+
+import lombok.AllArgsConstructor;
 
 @RestController
 @RequestMapping("/api/participants")
-//@CrossOrigin(origins = "http://localhost:5173")
+// @CrossOrigin(origins = "http://localhost:5173")
 @AllArgsConstructor
 public class ParticipantController {
 
@@ -43,14 +43,11 @@ public class ParticipantController {
 
     @PostMapping
     public ResponseEntity<ParticipantDTO> createParticipant(@RequestBody ParticipantDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(participantService.createParticipant(dto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(participantService.createParticipant(dto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ParticipantDTO> updateParticipant(
-            @PathVariable Long id,
-            @RequestBody ParticipantDTO dto) {
+    public ResponseEntity<ParticipantDTO> updateParticipant(@PathVariable Long id, @RequestBody ParticipantDTO dto) {
         return ResponseEntity.ok(participantService.updateParticipant(id, dto));
     }
 
@@ -59,5 +56,4 @@ public class ParticipantController {
         participantService.deleteParticipant(id);
         return ResponseEntity.noContent().build();
     }
-
 }

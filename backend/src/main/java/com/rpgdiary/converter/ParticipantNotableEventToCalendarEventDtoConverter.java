@@ -1,10 +1,12 @@
 package com.rpgdiary.converter;
 
-import com.rpgdiary.dto.CalendarEventDTO;
-import com.rpgdiary.model.ParticipantNotableDate;
 import org.springframework.core.convert.converter.Converter;
 
-public class ParticipantNotableEventToCalendarEventDtoConverter implements Converter<ParticipantNotableDate, CalendarEventDTO>  {
+import com.rpgdiary.dto.CalendarEventDTO;
+import com.rpgdiary.model.ParticipantNotableDate;
+
+public class ParticipantNotableEventToCalendarEventDtoConverter
+        implements Converter<ParticipantNotableDate, CalendarEventDTO> {
 
     @Override
     public CalendarEventDTO convert(ParticipantNotableDate from) {
