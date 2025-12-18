@@ -18,6 +18,8 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -30,7 +32,9 @@ import lombok.Setter;
 @Entity
 @Table(name = "parties")
 @Data
-// @EqualsAndHashCode(exclude = {"members", "notableDates"})
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Party {
 
     @Id
@@ -59,47 +63,4 @@ public class Party {
 
     @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<PartyNotableDate> notableDates = new HashSet<>();
-
-    public static PartyBuilder builder() {
-        return new PartyBuilder();
-    }
-
-    @NoArgsConstructor
-    @Getter
-    @Setter
-    public static class PartyBuilder {
-        String name;
-        private String description;
-        private Set<Participant> members;
-        private Long id;
-
-        public PartyBuilder name(String name) {
-            this.name = name;
-            return this;
-        }
-
-        public PartyBuilder description(String description) {
-            this.description = description;
-            return this;
-        }
-
-        public PartyBuilder id(Long id) {
-            this.id = id;
-            return this;
-        }
-
-        public PartyBuilder members(Set<Participant> members) {
-            this.members = members;
-            return this;
-        }
-
-        public Party build() {
-            Party party = new Party();
-            party.setName(this.name);
-            party.setDescription(this.description);
-            party.setMembers(members);
-            party.setId(this.id);
-            return party;
-        }
-    }
 }
