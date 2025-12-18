@@ -1,5 +1,9 @@
 package com.rpgdiary.model;
 
+import static jakarta.persistence.GenerationType.IDENTITY;
+
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -7,14 +11,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+
+import org.hibernate.annotations.CreationTimestamp;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.LocalDateTime;
-
-import static jakarta.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "calendar_configuration")
@@ -28,7 +30,7 @@ public class CalendarConfiguration {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name ="calendar_type_code", nullable = false)
+    @JoinColumn(name = "calendar_type_code", nullable = false)
     private CalendarType calendarType;
 
     @Column(nullable = false)

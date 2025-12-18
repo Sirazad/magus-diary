@@ -1,17 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0          http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
-    <groupId>com.rpgdiary</groupId>
-    <artifactId>rpg-diary-backend</artifactId>
-    <version>1.0.1</version>
-    <packaging>jar</packaging>
-
-    <name>RPG Diary Backend</name>
-    <description>Backend for RPG Diary Application</description>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -20,14 +9,23 @@
         <relativePath/>
     </parent>
 
+    <groupId>com.rpgdiary</groupId>
+    <artifactId>rpg-diary-backend</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>RPG Diary Backend</name>
+    <description>Backend for RPG Diary Application</description>
+
     <properties>
         <java.version>25</java.version>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <querydsl.version>5.1.0</querydsl.version>
     </properties>
 
     <dependencies>
-        <!-- Spring Boot Starters -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -43,55 +41,110 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!-- Database -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.7.7</version>
+            <version>42.7.1</version>
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.42</version>
-            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
 
-        <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <!-- Swagger / OpenAPI -->
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>3.0.0</version>
-        </dependency>
-
-
-        <!-- Dynamic Query -->
-        <dependency>
-            <groupId>com.querydsl</groupId>
-            <artifactId>querydsl-apt</artifactId>
-            <version>${querydsl.version}</version>
-            <scope>provided</scope>
-            <classifier>jakarta</classifier>
-        </dependency>
-
-        <dependency>
-            <groupId>com.querydsl</groupId>
-            <artifactId>querydsl-jpa</artifactId>
-            <version>${querydsl.version}</version>
-            <classifier>jakarta</classifier>
-        </dependency>    </dependencies>
+    </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <java>
+                        <palantirJavaFormat>
+                            <version>2.74.0</version>
+                        </palantirJavaFormat>
+                        <importOrder>
+                            <order>\#,java,javax,jakarta,org,com,,</order>
+                        </importOrder>
+                        <indent>
+                            <spaces>true</spaces>
+                            <spacesPerTab>4</spacesPerTab>
+                        </indent>
+                        <formatAnnotations/>
+                        <removeUnusedImports/>
+                        <cleanthat>
+                            <version>2.24</version>
+                            <sourceJdk>${java.version}</sourceJdk>
+                            <includeDraft>true</includeDraft>
+                            <mutators>
+                                <mutator>ImportQualifiedTokens</mutator>
+                                <mutator>OptionalMapIdentity</mutator>
+                                <mutator>PMDMutators</mutator>
+                                <mutator>SafeAndConsensual</mutator>
+                                <mutator>SafeButNotConsensual</mutator>
+                                <mutator>SimplifyBooleanInitialization</mutator>
+                                <mutator>SonarMutators</mutator>
+                                <mutator>StreamMapIdentity</mutator>
+                            </mutators>
+                            <excludedMutators>
+                                <mutator>AvoidInlineConditionals</mutator>
+                                <mutator>CastMathOperandBeforeAssignement</mutator>
+                                <mutator>LocalVariableTypeInference</mutator>
+                                <mutator>SimplifyStartsWith</mutator>
+                                <mutator>UseTextBlocks</mutator>
+                            </excludedMutators>
+                        </cleanthat>
+                    </java>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>apply</goal>
+                        </goals>
+                        <phase>process-sources</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.github.ekryd.sortpom</groupId>
+                <artifactId>sortpom-maven-plugin</artifactId>
+                <version>3.4.1</version>
+                <configuration>
+                    <createBackupFile>false</createBackupFile>
+                    <expandEmptyElements>false</expandEmptyElements>
+                    <nrOfIndentSpace>4</nrOfIndentSpace>
+                    <sortDependencyExclusions>groupId,artifactId</sortDependencyExclusions>
+                    <sortDependencyManagement>groupId,artifactId</sortDependencyManagement>
+                    <sortProperties>true</sortProperties>
+                    <verifyFail>stop</verifyFail>
+                    <verifyFailOn>strict</verifyFailOn>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>sortpom-sort</id>
+                        <goals>
+                            <goal>sort</goal>
+                        </goals>
+                        <phase>validate</phase>
+                    </execution>
+                    <execution>
+                        <id>sortpom-verify</id>
+                        <goals>
+                            <goal>verify</goal>
+                        </goals>
+                        <phase>validate</phase>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -108,42 +161,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.10.1</version>
-                <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                    <release>${java.version}</release>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>1.18.42</version>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>com.mysema.maven</groupId>
-                <artifactId>apt-maven-plugin</artifactId>
-                <version>1.1.3</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>process</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>target/generated-sources/java</outputDirectory>
-                            <processor>com.querydsl.apt.jpa.JPAAnnotationProcessor</processor>
-                        </configuration>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.querydsl</groupId>
-                        <artifactId>querydsl-apt</artifactId>
-                        <version>${querydsl.version}</version>
-                    </dependency>
-                </dependencies>
             </plugin>
         </plugins>
     </build>
+
 </project>
