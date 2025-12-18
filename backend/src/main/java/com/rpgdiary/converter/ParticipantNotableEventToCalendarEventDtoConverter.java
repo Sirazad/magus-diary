@@ -15,7 +15,6 @@ public class ParticipantNotableEventToCalendarEventDtoConverter
                 .eventName(from.getEventName())
                 .description(from.getDescription())
                 .type(from.getCalendarType().getCode())
-                .description(from.getDescription())
                 .dayStart(from.getDay())
                 .dayEnd(from.getDayEnd())
                 .isRecurring(from.isRecurring())

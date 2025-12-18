@@ -38,7 +38,7 @@ public class AppConfig {
     @Bean
     @Lazy
     public FormattingConversionService converter() {
-        FormattingConversionService conversionService = new FormattingConversionService();
+        var conversionService = new FormattingConversionService();
 
         conversionService.addConverter(calendarConfigToDTOConverter);
         conversionService.addConverter(calendarTypeToDTOConverter);

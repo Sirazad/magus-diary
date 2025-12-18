@@ -1,8 +1,7 @@
 import React from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import apiClient from '../../services/api';
 import type { CalendarEvent, CalendarDateDTO } from '../../types/Calendar';
-import { LoadingSpinner } from '../Common/LoadingSpinner';
 import { ErrorAlert } from '../Common/ErrorAlert';
 import './EventList.css';
 
@@ -27,8 +26,6 @@ export const EventList: React.FC<EventListProps> = ({
   onEventChange,
   events = [],
 }) => {
-  const queryClient = useQueryClient();
-
   const deleteMutation = useMutation({
     mutationFn: async ({ eventId, eventType }: { eventId: number; eventType: string }) => {
       if (eventType === 'holiday') {

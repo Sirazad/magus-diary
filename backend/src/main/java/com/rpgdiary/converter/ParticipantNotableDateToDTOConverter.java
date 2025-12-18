@@ -8,7 +8,6 @@ import com.rpgdiary.model.ParticipantNotableDate;
 public class ParticipantNotableDateToDTOConverter
         implements Converter<ParticipantNotableDate, ParticipantNotableDateDTO> {
 
-    // TODO participantId?
     @Override
     public ParticipantNotableDateDTO convert(ParticipantNotableDate from) {
         Long participantId =

@@ -54,7 +54,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ calendarTypeCode, ac
   const totalMonths = allMonthConfigs?.length;
 
   // Fetch all events for the current month
-  const { data: monthEvents, isLoading: isLoadingEvents, error: eventsError } = useQuery({
+  const { data: monthEvents } = useQuery({
     queryKey: ['calendar-month-events', calendarTypeCode, year, currentMonthConfig?.monthNumber, activeParticipantId],
     queryFn: async () => {
       if (!currentMonthConfig) {

@@ -25,7 +25,7 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now(),
                 request.getDescription(false).replace("uri=", ""));
 
-        log.info("Unexpected error: ", ex);
+        log.error("Unexpected error: ", ex);
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
@@ -33,42 +33,42 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
             IllegalArgumentException ex, WebRequest request) {
 
-        ErrorResponse errorResponse = new ErrorResponse(
+        var errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 ex.getMessage(),
                 "Invalid Input",
                 LocalDateTime.now(),
                 request.getDescription(false).replace("uri=", ""));
 
-        log.info("Unexpected error: ", ex);
+        log.error("Unexpected error: ", ex);
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleIllegalStateException(IllegalStateException ex, WebRequest request) {
 
-        ErrorResponse errorResponse = new ErrorResponse(
+        var errorResponse = new ErrorResponse(
                 HttpStatus.CONFLICT.value(),
                 ex.getMessage(),
                 "Conflict",
                 LocalDateTime.now(),
                 request.getDescription(false).replace("uri=", ""));
 
-        log.info("Unexpected error: ", ex);
+        log.error("Unexpected error: ", ex);
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, WebRequest request) {
 
-        ErrorResponse errorResponse = new ErrorResponse(
+        var errorResponse = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "An unexpected error occurred",
                 ex.getClass().getSimpleName(),
                 LocalDateTime.now(),
                 request.getDescription(false).replace("uri=", ""));
 
-        log.info("Unexpected error: ", ex);
+        log.error("Unexpected error: ", ex);
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

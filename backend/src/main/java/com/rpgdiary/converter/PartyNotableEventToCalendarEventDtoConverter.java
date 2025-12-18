@@ -12,7 +12,6 @@ public class PartyNotableEventToCalendarEventDtoConverter implements Converter<P
         return CalendarEventDTO.builder()
                 .id(from.getId())
                 .eventName(from.getEventName())
-                .description(from.getDescription())
                 .type(from.getCalendarType().getCode())
                 .description(from.getDescription())
                 .dayStart(from.getDay())

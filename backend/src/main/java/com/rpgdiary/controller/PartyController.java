@@ -21,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/parties")
-// @CrossOrigin(origins = "http://localhost:5173")
 @AllArgsConstructor
 @Slf4j
 public class PartyController {

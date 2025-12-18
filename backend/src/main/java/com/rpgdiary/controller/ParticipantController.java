@@ -20,7 +20,6 @@ import lombok.AllArgsConstructor;
 
 @RestController
 @RequestMapping("/api/participants")
-// @CrossOrigin(origins = "http://localhost:5173")
 @AllArgsConstructor
 public class ParticipantController {
 

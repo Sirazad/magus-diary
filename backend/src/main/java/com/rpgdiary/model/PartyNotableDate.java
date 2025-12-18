@@ -148,8 +148,8 @@ public class PartyNotableDate {
             return this;
         }
 
-        public PartyNotableDateBuilder updatedAt(LocalDateTime updatatedAt) {
-            this.updatedAt = updatatedAt;
+        public PartyNotableDateBuilder updatedAt(LocalDateTime updatedAt) {
+            this.updatedAt = updatedAt;
             return this;
         }
 
