@@ -17,7 +17,6 @@ import lombok.AllArgsConstructor;
 
 @RestController
 @RequestMapping("/api/calendar")
-// @CrossOrigin(origins = "http://localhost:5173")
 @AllArgsConstructor
 public class CalendarController {
 

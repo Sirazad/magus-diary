@@ -15,10 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 public class PartyToDTOConverter implements Converter<Party, PartyDTO> {
     @Override
     public PartyDTO convert(Party from) {
-        log.debug("Converting Party entity with id {} to PartyDTO", from.getId());
+        Long id = from.getId();
+        log.debug("Converting Party entity with id {} to PartyDTO", id);
         Set<Long> members = from.getMembers().stream().map(Participant::getId).collect(Collectors.toSet());
         return PartyDTO.builder()
-                .id(from.getId())
+                .id(id)
                 .name(from.getName())
                 .description(from.getDescription())
                 .memberIds(members)
