@@ -9,7 +9,7 @@ import com.rpgdiary.model.PartyNotableDate;
 public class PartyNotableDateToDTOConverter implements Converter<PartyNotableDate, PartyNotableDateDTO> {
     @Override
     public @Nullable PartyNotableDateDTO convert(PartyNotableDate from) {
-        return PartyNotableDateDTO.build()
+        return PartyNotableDateDTO.builder()
                 .id(from.getId())
                 .day(from.getDay())
                 .year(from.getYear())
