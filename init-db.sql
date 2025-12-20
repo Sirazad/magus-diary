@@ -43,7 +43,7 @@ CREATE TABLE parties (
 );
 
 -- Party Members
-CREATE TABLE party_members (
+CREATE TABLE party_participants (
     party_id BIGSERIAL NOT NULL,
     participant_id BIGSERIAL NOT NULL,
     PRIMARY KEY (party_id, participant_id),
@@ -67,8 +67,7 @@ CREATE TABLE participant_notable_date (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (participant_id) REFERENCES participants(id) ON DELETE CASCADE,
-    FOREIGN KEY (calendar_type_code) REFERENCES calendar_types(code),
-    UNIQUE(participant_id, calendar_type_code, year, day)
+    FOREIGN KEY (calendar_type_code) REFERENCES calendar_types(code)
 );
 
 -- Party Notable Dates
@@ -87,8 +86,7 @@ CREATE TABLE party_notable_date (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE,
-    FOREIGN KEY (calendar_type_code) REFERENCES calendar_types(code),
-    UNIQUE(party_id, calendar_type_code, year, day)
+    FOREIGN KEY (calendar_type_code) REFERENCES calendar_types(code)
 );
 
 -- Indexes
@@ -165,3 +163,4 @@ INSERT INTO participants (name, type, description) VALUES
 -- Insert Sample Holiday for Pyarr (Day 1 of Year 1)
 INSERT INTO participant_notable_date (participant_id, calendar_type_code, year, day, day_end, event_name, description, is_recurring, year_start) VALUES
     (1, 'pyarr', NULL, 16, 20, 'Teremtő akarat ünnepe', 'egy hetes ünnep', TRUE, 1);
+

@@ -16,12 +16,14 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "participant_notable_date")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ParticipantNotableDate {

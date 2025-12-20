@@ -32,3 +32,30 @@ export interface CalendarEvent {
   yearStart: number | null; 
   yearEnd: number | null;
 }
+
+export interface CalendarDateDTO {
+  calendarTypeCode: string;
+  year: number;
+  day: number; // Global day number (1-620)
+  dayInMonth?: number; // Day within the month (1-20, etc.)
+  dayOfWeek: number;
+  monthName: string;
+  monthNumber: number;
+  season: string;
+  godName: string | null;
+  holidays: CalendarEvent[];
+  participantNotableDates: CalendarEvent[];
+  partyNotableDates: CalendarEvent[];
+}
+
+export interface MonthConfigDTO {
+  id: number;
+  calendarTypeCode: string;
+  calendarTypeCodeName: string;
+  monthNumber: number;
+  monthName: string;
+  dayStart: number;
+  dayEnd: number;
+  season: string;
+  god: string | null;
+}
